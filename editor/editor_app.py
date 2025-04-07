@@ -29,18 +29,17 @@ class ExifEditorApp:
 
         root.title("Fenêtre avec trois sections redimensionnables")
 
-        # Créer et initialiser la barre de menus
-        self.menu_bar = MenuBar(root, self.reset_window)
-
-        self.main_pane = tk.PanedWindow(root, orient=tk.HORIZONTAL, sashrelief=tk.RAISED)
+        self.main_pane = tk.PanedWindow(root, orient=tk.HORIZONTAL)
         self.main_pane.pack(fill=tk.BOTH, expand=True)
 
-        self.left_pane = tk.PanedWindow(self.main_pane, orient=tk.VERTICAL, sashrelief=tk.RAISED)
+        self.left_pane = tk.PanedWindow(self.main_pane, orient=tk.VERTICAL)
         self.main_pane.add(self.left_pane)
 
-        self.top_left = tk.Frame(self.left_pane, bg="lightblue")
-        self.bottom_left = tk.Frame(self.left_pane, bg="lightgreen")
+        self.top_left_content = ImageWidget(self.left_pane)
+
+        self.top_left = self.top_left_content
         self.left_pane.add(self.top_left)
+        self.bottom_left = tk.Frame(self.left_pane, bg="lightgreen")
         self.left_pane.add(self.bottom_left)
 
         self.right = tk.Frame(self.main_pane, bg="lightgray")
@@ -49,9 +48,10 @@ class ExifEditorApp:
         self.main_pane.bind("<Double-Button-1>", self.reset_main_split)
         self.left_pane.bind("<Double-Button-1>", self.reset_left_split)
 
-        tk.Label(self.top_left, text="Haut gauche").pack(padx=10, pady=10)
         tk.Label(self.bottom_left, text="Bas gauche").pack(padx=10, pady=10)
         tk.Label(self.right, text="Droite").pack(padx=10, pady=10)
+
+        self.menu_bar = MenuBar(root, self.reset_window, self.top_left_content.open_file_dialog)
 
         root.after(100, self.restore_split)
         root.protocol("WM_DELETE_WINDOW", self.on_close)
