@@ -1,22 +1,22 @@
 import os
 import tkinter as tk
-from tkinter import PhotoImage
 from datetime import datetime
 
 import piexif
 
 from editor.image_widget import load_icon
-from editor.shared_data import ImageData, StyleData
+from editor.shared_data import ImageData, StyleData, MetadataData
 
 
 class MetadataWidget(tk.Frame):
-    def __init__(self, parent, image_data: ImageData, style_data: StyleData):
+    def __init__(self, parent, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         super().__init__(parent)
         self.image_data = image_data
+        self.metadata_data = metadata_data
         self.style_data = style_data
         self.configure(bg=style_data.bg_color)
 
-        self.labels = [{"key": "nom", "title": "Nom", "disable": False},
+        self.labels = [{"key": "nom", "title": "Nom", "disable": True},
                        {"key": "format", "title": "Format", "disable": True},
                        {"key": "poids", "title": "Poids", "disable": True},
                        {"key": "dimensions", "title": "Dimensions (lxH)", "disable": True},
@@ -24,7 +24,6 @@ class MetadataWidget(tk.Frame):
                        {"key": "date_modification", "title": "Date de modification", "disable": True},
                        {"key": "latitude", "title": "Latitude", "disable": False},
                        {"key": "longitude", "title": "Longitude", "disable": False}]
-        self.entries = {}
 
         assets_path = "./assets/"
         self.reset_icon = load_icon(f"{assets_path}/{style_data.mode}/reset.png", 20)
@@ -33,7 +32,8 @@ class MetadataWidget(tk.Frame):
         self.reset_button.bind("<Button-1>", self.reset_all)
 
         for i, label_data in enumerate(self.labels):
-            label = tk.Label(self, text="{0} : ".format(label_data["title"]), bg=style_data.bg_tab_color, fg=style_data.font_color)
+            label = tk.Label(self, text="{0} : ".format(label_data["title"]), bg=style_data.bg_tab_color,
+                             fg=style_data.font_color)
             entry = tk.Entry(self,
                              bg=style_data.bg_tab_color,
                              fg=style_data.font_color,
@@ -43,8 +43,8 @@ class MetadataWidget(tk.Frame):
                              insertbackground=style_data.font_color
                              )
 
-            label.grid(row=i+1, column=0, sticky="w", padx=5, pady=5)
-            entry.grid(row=i+1, column=1, sticky="ew", padx=5, pady=5)
+            label.grid(row=i + 1, column=0, sticky="w", padx=5, pady=5)
+            entry.grid(row=i + 1, column=1, sticky="ew", padx=5, pady=5)
 
             entry.bind("<FocusIn>", self.on_focus_in)
             entry.bind("<FocusOut>", self.on_focus_out)
@@ -62,28 +62,28 @@ class MetadataWidget(tk.Frame):
                                       highlightthickness=0,
                                       highlightbackground=style_data.bg_color,
                                       relief="flat")
-                btn_reset.grid(row=i+1, column=2, padx=5, pady=5)
+                btn_reset.grid(row=i + 1, column=2, padx=5, pady=5)
 
-            self.entries[label_data["key"]] = entry
+            self.metadata_data.entries[label_data["key"]] = entry
 
-        # Permet à l'entrée de s'étendre quand la fenêtre est redimensionnée
         self.grid_columnconfigure(1, weight=1)
 
-        # Écouter l’événement
         self.bind("<<ImageUpdated>>", self.update_metadata)
-        self.after(100, self.hook_imagewidget)
+        self.after(100, self.hook_imagewidget, *())
 
     def on_focus_in(self, event):
         """Changement de bordure quand l'entry reçoit le focus."""
-        event.widget.config(highlightbackground=self.style_data.select_color, highlightcolor=self.style_data.select_color)
+        event.widget.config(highlightbackground=self.style_data.select_color,
+                            highlightcolor=self.style_data.select_color)
 
     def on_focus_out(self, event):
         """Changement de bordure quand l'entry perd le focus."""
-        event.widget.config(highlightbackground=self.style_data.border_color, highlightcolor=self.style_data.border_color)
+        event.widget.config(highlightbackground=self.style_data.border_color,
+                            highlightcolor=self.style_data.border_color)
 
     def reset(self, key, index):
         """Reset la valeur d'un input."""
-        entry = self.entries[key]
+        entry = self.metadata_data.entries[key]
         entry.delete(0, tk.END)
 
         data = self.get_data()
@@ -93,7 +93,7 @@ class MetadataWidget(tk.Frame):
 
     def reset_all(self, event=None):
         """Reset la valeur des metadata."""
-        for index, entry in enumerate(self.entries.values()):
+        for index, entry in enumerate(self.metadata_data.entries.values()):
             entry.delete(0, tk.END)
 
             data = self.get_data()
@@ -117,62 +117,82 @@ class MetadataWidget(tk.Frame):
                     {"key": "format", "value": get_format(image)},
                     {"key": "poids", "value": get_poids(path)},
                     {"key": "dimensions", "value": get_size(image)},
-                    {"key": "date_creation", "value": get_date_taken(image)},
+                    {"key": "date_creation", "value": get_date_taken(image, self.style_data.exif_date_format,
+                                                                     self.style_data.displayed_date_format)},
                     {"key": "date_modification", "value": get_date_modify(path)},
                     {"key": "latitude", "value": latitude},
-                    {"key": "longitude", "value": longitude},]
+                    {"key": "longitude", "value": longitude}, ]
         return None
 
     def update_metadata(self, event=None):
         data = self.get_data()
         if data:
-            for i, label_data in enumerate(data):
-                key, value = label_data["key"], label_data["value"]
-                if value is None:
-                    value = ""
-                value = str(value)
-                if key in self.entries:
-                    entry = self.entries[key]
-                    entry.config(state="normal")
-                    entry.delete(0, tk.END)
-                    entry.insert(0, value)
-                    if self.labels[i]["disable"]:
-                        entry.config(state="disabled")
-
+            self._populate_entries(data)
         else:
-            for key in self.entries:
-                self.entries[key].delete(0, tk.END)
+            self._clear_all_entries()
 
-def get_date_taken(image):
+    def _populate_entries(self, data):
+        for i, label_data in enumerate(data):
+            key = label_data["key"]
+            value = str(label_data.get("value") or "")
+
+            if key in self.metadata_data.entries:
+                self._update_entry(i, key, value)
+
+    def _update_entry(self, index, key, value):
+        entry = self.metadata_data.entries[key]
+        entry.config(state="normal")
+        entry.delete(0, tk.END)
+        entry.insert(0, value)
+
+        if self.labels[index]["disable"]:
+            entry.config(state="disabled")
+
+    def _clear_all_entries(self):
+        for index, (key, entry) in enumerate(self.metadata_data.entries.items()):
+            entry.config(state="normal")
+            entry.delete(0, tk.END)
+
+            if self.labels[index]["disable"]:
+                entry.config(state="disabled")
+
+
+def get_date_taken(image, exif_date_format, displayed_date_format):
     exif_data = piexif.load(image.info['exif'])
     date_prise_vue = exif_data.get("0th", {}).get(piexif.ImageIFD.DateTime)
 
     if date_prise_vue:
         date_prise_vue = date_prise_vue.decode('utf-8')
-        date_obj = datetime.strptime(date_prise_vue, '%Y:%m:%d %H:%M:%S')
-        date_prise_vue_formattee = date_obj.strftime('%Y-%m-%d %H:%M:%S')
+        date_obj = datetime.strptime(date_prise_vue, exif_date_format)
+        date_prise_vue_formattee = date_obj.strftime(displayed_date_format)
         return date_prise_vue_formattee
     else:
         return None
+
 
 def get_date_modify(path):
     date_modification_timestamp = os.path.getmtime(path)
     date_modification = datetime.fromtimestamp(date_modification_timestamp)
     return date_modification
 
+
 def get_poids(path):
     poids_image = os.path.getsize(path)
     poids_image_ko = (poids_image / 1024)
     return f"{poids_image_ko:.2f} Ko"
 
+
 def get_name(path):
     return ".".join(path.split("/")[-1].split(".")[:-1])
+
 
 def get_format(image):
     return image.format
 
+
 def get_size(image):
     return f"{image.width} x {image.height}"
+
 
 def get_geotagging(exif_data):
     """Extrait les données GPS du dictionnaire EXIF"""
@@ -200,6 +220,7 @@ def get_geotagging(exif_data):
 
             return latitude, longitude
     return None, None
+
 
 def get_coordinates(image):
     """Retourne les coordonnées GPS d'une image si disponibles"""

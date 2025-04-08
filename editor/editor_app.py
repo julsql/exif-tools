@@ -5,7 +5,7 @@ from editor.config_manager import ConfigManager
 from editor.image_widget import ImageWidget
 from editor.menu import MenuBar
 from editor.metadata_widget import MetadataWidget
-from editor.shared_data import ImageData, StyleData
+from editor.shared_data import ImageData, StyleData, MetadataData
 
 
 class ExifEditorApp:
@@ -35,15 +35,16 @@ class ExifEditorApp:
         self.main_pane.pack(fill=tk.BOTH, expand=True)
 
         self.image_data = ImageData()
+        self.metadata_data = MetadataData()
         self.style_data = StyleData()
 
         self.left_pane = tk.PanedWindow(self.main_pane, orient=tk.VERTICAL)
         self.main_pane.add(self.left_pane)
 
-        self.image_content = ImageWidget(self.left_pane, self.image_data, self.style_data)
+        self.image_content = ImageWidget(self.left_pane, self.image_data, self.metadata_data, self.style_data)
         self.left_pane.add(self.image_content)
 
-        self.metadata_content = MetadataWidget(self.left_pane, self.image_data, self.style_data)
+        self.metadata_content = MetadataWidget(self.left_pane, self.image_data, self.metadata_data, self.style_data)
         self.left_pane.add(self.metadata_content)
 
         self.right = tk.Frame(self.main_pane, bg="lightgray")

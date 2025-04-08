@@ -4,6 +4,10 @@ class ImageData:
         self.pil_image = None
         self.tk_image = None
 
+class MetadataData:
+    def __init__(self):
+        self.entries = {}
+
 class StyleData:
     def __init__(self):
         self.bg_color = "white"
@@ -14,3 +18,6 @@ class StyleData:
         self.bg_disable = "lightgray"
         self.fg_disable = "gray"
         self.mode = "dark"
+
+        self.exif_date_format = '%Y:%m:%d %H:%M:%S'
+        self.displayed_date_format = '%Y-%m-%d %H:%M:%S'
