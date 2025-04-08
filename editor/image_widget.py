@@ -1,28 +1,31 @@
 import tkinter as tk
-from tkinter import PhotoImage
+from datetime import datetime
 from tkinter import filedialog
 
+import piexif
 from PIL import Image, ImageTk
 
-from editor.shared_data import ImageData, StyleData
+from editor.shared_data import ImageData, StyleData, MetadataData
 
 
 def load_icon(file_path, height):
-    """Charge une icône et ajuste sa taille en maintenant le ratio."""
-    icon = PhotoImage(file=file_path)
-    ratio = icon.width() / icon.height()
+    """Charge une icône, ajuste sa taille en gardant le ratio, et renvoie une ImageTk."""
+    image = Image.open(file_path)
+    ratio = image.width / image.height
     width = int(height * ratio)
-    return icon.subsample(int(icon.width() / width), int(icon.height() / height))
+    resized_image = image.resize((width, height), Image.LANCZOS)
+    return ImageTk.PhotoImage(resized_image)
 
 
 class ImageWidget(tk.Frame):
-    def __init__(self, parent, image_data: ImageData, style_data: StyleData):
+    def __init__(self, parent, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         assets_path = "./assets/"
         icon_padding = 1
         icon_height = 20
 
         super().__init__(parent)
         self.image_data = image_data
+        self.metadata_data = metadata_data
         self.style_data = style_data
 
         self.parent = parent
@@ -36,21 +39,21 @@ class ImageWidget(tk.Frame):
         self.bottom_border_frame.grid(row=1, column=0, sticky="ew")
 
         # Ajouter les icônes à gauche
-        self.save = load_icon(f"{assets_path}/{style_data.mode}/save.png", icon_height)
-        self.save_as = load_icon(f"{assets_path}/{style_data.mode}/save_as.png", icon_height)
-        self.add_photo = load_icon(f"{assets_path}/{style_data.mode}/folder_open.png", icon_height)
-        self.close = load_icon(f"{assets_path}/{style_data.mode}/close.png", icon_height)
+        self.save_icon = load_icon(f"{assets_path}/{style_data.mode}/save.png", icon_height)
+        self.save_as_icon = load_icon(f"{assets_path}/{style_data.mode}/save_as.png", icon_height)
+        self.add_photo_icon = load_icon(f"{assets_path}/{style_data.mode}/folder_open.png", icon_height)
+        self.close_icon = load_icon(f"{assets_path}/{style_data.mode}/close.png", icon_height)
 
-        self.icon_label1 = tk.Label(self.top_frame, image=self.save, bg=style_data.bg_tab_color)
+        self.icon_label1 = tk.Label(self.top_frame, image=self.save_icon, bg=style_data.bg_tab_color)
         self.icon_label1.grid(row=0, column=0, padx=icon_padding)
 
-        self.icon_label2 = tk.Label(self.top_frame, image=self.save_as, bg=style_data.bg_tab_color)
+        self.icon_label2 = tk.Label(self.top_frame, image=self.save_as_icon, bg=style_data.bg_tab_color)
         self.icon_label2.grid(row=0, column=1, padx=icon_padding)
 
-        self.icon_label3 = tk.Label(self.top_frame, image=self.add_photo, bg=style_data.bg_tab_color)
+        self.icon_label3 = tk.Label(self.top_frame, image=self.add_photo_icon, bg=style_data.bg_tab_color)
         self.icon_label3.grid(row=0, column=2, padx=icon_padding)
 
-        self.icon_label4 = tk.Label(self.top_frame, image=self.close, bg=style_data.bg_tab_color)
+        self.icon_label4 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.bg_tab_color)
         self.icon_label4.grid(row=0, column=3, padx=icon_padding, sticky="e")
 
         self.image_area = tk.Label(self, bg=style_data.bg_color)
@@ -66,10 +69,78 @@ class ImageWidget(tk.Frame):
 
         button_event = "<Button-1>"
 
+        self.icon_label1.bind(button_event, self.save)
         self.icon_label3.bind(button_event, self.open_file_dialog)
         self.icon_label4.bind(button_event, self.close_image)
 
         self.loaded_image = None
+
+    def save(self, event=None):
+        image = self.image_data.pil_image
+        path = self.image_data.image_path
+
+        if not (image and path):
+            return
+
+        # Récupérer les valeurs des champs
+        date_str = self.metadata_data.entries["date_creation"].get()
+        latitude_str = self.metadata_data.entries["latitude"].get()
+        longitude_str = self.metadata_data.entries["longitude"].get()
+
+        # Valider les données
+        date = self._parse_date(date_str)
+        latitude = self._parse_coordinate(latitude_str)
+        longitude = self._parse_coordinate(longitude_str)
+
+        # Mettre à jour les métadonnées EXIF
+        exif_bytes = self._update_exif_metadata(image, date, latitude, longitude)
+
+        if date or latitude or longitude:
+            piexif.insert(exif_bytes, path)
+
+    def _parse_date(self, date_str):
+        try:
+            return datetime.strptime(
+                date_str, self.style_data.displayed_date_format
+            ).strftime(self.style_data.exif_date_format)
+        except ValueError:
+            print("Format de date incorrect")
+            return None
+
+    def _parse_coordinate(self, coord_str):
+        try:
+            return float(coord_str)
+        except ValueError:
+            print("Format de latitude/longitude incorrect")
+            return None
+
+    def _decimal_to_dms_rational(self, deg):
+        d = int(deg)
+        m = int((deg - d) * 60)
+        s = round(((deg - d) * 60 - m) * 60 * 10000)
+        return [(d, 1), (m, 1), (s, 10000)]
+
+    def _update_exif_metadata(self, image, date, latitude, longitude):
+        exif_dict = piexif.load(image.info.get("exif", b""))
+        print(exif_dict)
+
+        # Dates
+        if date:
+            encoded_date = date.encode()
+            exif_dict['0th'][piexif.ImageIFD.DateTime] = encoded_date
+            exif_dict['Exif'][piexif.ExifIFD.DateTimeOriginal] = encoded_date
+            exif_dict['Exif'][piexif.ExifIFD.DateTimeDigitized] = encoded_date
+
+        # GPS
+        if latitude:
+            exif_dict['GPS'][piexif.GPSIFD.GPSLatitudeRef] = b'N' if latitude >= 0 else b'S'
+            exif_dict['GPS'][piexif.GPSIFD.GPSLatitude] = self._decimal_to_dms_rational(abs(latitude))
+
+        if longitude:
+            exif_dict['GPS'][piexif.GPSIFD.GPSLongitudeRef] = b'E' if longitude >= 0 else b'W'
+            exif_dict['GPS'][piexif.GPSIFD.GPSLongitude] = self._decimal_to_dms_rational(abs(longitude))
+
+        return piexif.dump(exif_dict)
 
     def close_image(self, event=None):
         """Ferme l'image."""
