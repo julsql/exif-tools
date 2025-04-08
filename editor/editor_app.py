@@ -4,6 +4,8 @@ from tkinter import PhotoImage
 from editor.config_manager import ConfigManager
 from editor.image_widget import ImageWidget
 from editor.menu import MenuBar
+from editor.metadata_widget import MetadataWidget
+from editor.shared_data import ImageData, StyleData
 
 
 class ExifEditorApp:
@@ -32,15 +34,17 @@ class ExifEditorApp:
         self.main_pane = tk.PanedWindow(root, orient=tk.HORIZONTAL)
         self.main_pane.pack(fill=tk.BOTH, expand=True)
 
+        self.image_data = ImageData()
+        self.style_data = StyleData()
+
         self.left_pane = tk.PanedWindow(self.main_pane, orient=tk.VERTICAL)
         self.main_pane.add(self.left_pane)
 
-        self.top_left_content = ImageWidget(self.left_pane)
+        self.top_left_content = ImageWidget(self.left_pane, self.image_data, self.style_data)
+        self.left_pane.add(self.top_left_content)
 
-        self.top_left = self.top_left_content
-        self.left_pane.add(self.top_left)
-        self.bottom_left = tk.Frame(self.left_pane, bg="lightgreen")
-        self.left_pane.add(self.bottom_left)
+        self.bottom_left_content = MetadataWidget(self.left_pane, self.image_data, self.style_data)
+        self.left_pane.add(self.bottom_left_content)
 
         self.right = tk.Frame(self.main_pane, bg="lightgray")
         self.main_pane.add(self.right)
@@ -48,10 +52,13 @@ class ExifEditorApp:
         self.main_pane.bind("<Double-Button-1>", self.reset_main_split)
         self.left_pane.bind("<Double-Button-1>", self.reset_left_split)
 
-        tk.Label(self.bottom_left, text="Bas gauche").pack(padx=10, pady=10)
-        tk.Label(self.right, text="Droite").pack(padx=10, pady=10)
+        tk.Label(self.right, text="Carte").pack(padx=10, pady=10)
 
-        self.menu_bar = MenuBar(root, self.reset_window, self.top_left_content.open_file_dialog)
+        self.menu_bar = MenuBar(root,
+                                self.reset_window,
+                                self.top_left_content.open_file_dialog,
+                                self.top_left_content.close_image,
+                                self.bottom_left_content.reset_all)
 
         root.after(100, self.restore_split)
         root.protocol("WM_DELETE_WINDOW", self.on_close)
