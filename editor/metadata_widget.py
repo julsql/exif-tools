@@ -1,9 +1,11 @@
 import os
 import tkinter as tk
+from tkinter import PhotoImage
 from datetime import datetime
 
 import piexif
 
+from editor.image_widget import load_icon
 from editor.shared_data import ImageData, StyleData
 
 
@@ -17,12 +19,18 @@ class MetadataWidget(tk.Frame):
         self.labels = [{"key": "nom", "title": "Nom", "disable": False},
                        {"key": "format", "title": "Format", "disable": True},
                        {"key": "poids", "title": "Poids", "disable": True},
-                       {"key": "dimensions", "title": "Dimensions", "disable": True},
+                       {"key": "dimensions", "title": "Dimensions (lxH)", "disable": True},
                        {"key": "date_creation", "title": "Date de création", "disable": False},
                        {"key": "date_modification", "title": "Date de modification", "disable": True},
-                       {"key": "longitude", "title": "Longitude", "disable": False},
-                       {"key": "latitude", "title": "Latitude", "disable": False}]
+                       {"key": "latitude", "title": "Latitude", "disable": False},
+                       {"key": "longitude", "title": "Longitude", "disable": False}]
         self.entries = {}
+
+        assets_path = "./assets/"
+        self.reset_icon = load_icon(f"{assets_path}/{style_data.mode}/reset.png", 20)
+        self.reset_button = tk.Label(self, image=self.reset_icon, bg=style_data.bg_tab_color, padx=0)
+        self.reset_button.grid(row=0, column=0, sticky="w")
+        self.reset_button.bind("<Button-1>", self.reset_all)
 
         for i, label_data in enumerate(self.labels):
             label = tk.Label(self, text="{0} : ".format(label_data["title"]), bg=style_data.bg_tab_color, fg=style_data.font_color)
@@ -35,8 +43,8 @@ class MetadataWidget(tk.Frame):
                              insertbackground=style_data.font_color
                              )
 
-            label.grid(row=i, column=0, sticky="w", padx=5, pady=5)
-            entry.grid(row=i, column=1, sticky="ew", padx=5, pady=5)
+            label.grid(row=i+1, column=0, sticky="w", padx=5, pady=5)
+            entry.grid(row=i+1, column=1, sticky="ew", padx=5, pady=5)
 
             entry.bind("<FocusIn>", self.on_focus_in)
             entry.bind("<FocusOut>", self.on_focus_out)
@@ -54,7 +62,7 @@ class MetadataWidget(tk.Frame):
                                       highlightthickness=0,
                                       highlightbackground=style_data.bg_color,
                                       relief="flat")
-                btn_reset.grid(row=i, column=2, padx=5, pady=5)
+                btn_reset.grid(row=i+1, column=2, padx=5, pady=5)
 
             self.entries[label_data["key"]] = entry
 
@@ -82,6 +90,16 @@ class MetadataWidget(tk.Frame):
         if data:
             value = data[index]["value"]
             entry.insert(0, value)
+
+    def reset_all(self, event=None):
+        """Reset la valeur des metadata."""
+        for index, entry in enumerate(self.entries.values()):
+            entry.delete(0, tk.END)
+
+            data = self.get_data()
+            if data:
+                value = data[index]["value"]
+                entry.insert(0, value)
 
     def hook_imagewidget(self):
         # Récupère le widget parent et s'abonne à son événement
