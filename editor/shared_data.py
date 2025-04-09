@@ -17,6 +17,10 @@ class StyleData:
         self.border_color = "black"
         self.bg_disable = "lightgray"
         self.fg_disable = "gray"
+
+        self.marker_circle_color = "blue"
+        self.marker_outside_color = "#4285ff"
+
         self.mode = "dark"
 
         self.exif_date_format = '%Y:%m:%d %H:%M:%S'

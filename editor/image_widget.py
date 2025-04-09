@@ -18,12 +18,13 @@ def load_icon(file_path, height):
 
 
 class ImageWidget(tk.Frame):
-    def __init__(self, parent, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
+    def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         assets_path = "./assets/"
         icon_padding = 1
         icon_height = 20
 
         super().__init__(parent)
+        self.event_bus = event_bus
         self.image_data = image_data
         self.metadata_data = metadata_data
         self.style_data = style_data
@@ -122,7 +123,7 @@ class ImageWidget(tk.Frame):
 
     def _update_exif_metadata(self, image, date, latitude, longitude):
         exif_dict = piexif.load(image.info.get("exif", b""))
-        print(exif_dict)
+        print("save")
 
         # Dates
         if date:
@@ -151,7 +152,7 @@ class ImageWidget(tk.Frame):
         self.image_data.image_path = None
         self.image_data.pil_image = None
         self.image_data.tk_image = None
-        self.event_generate("<<ImageUpdated>>")
+        self.event_bus.publish("metadata_updated", "close")
 
     def open_file_dialog(self, event=None):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.gif")])
@@ -181,7 +182,7 @@ class ImageWidget(tk.Frame):
             image = Image.open(self.image_data.image_path)
             self.image_data.pil_image = image
             self.reset_image()
-            self.event_generate("<<ImageUpdated>>")
+            self.event_bus.publish("metadata_updated", "open")
 
         except Exception as e:
             print(f"Erreur lors du chargement de l'image : {e}")

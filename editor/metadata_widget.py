@@ -9,11 +9,14 @@ from editor.shared_data import ImageData, StyleData, MetadataData
 
 
 class MetadataWidget(tk.Frame):
-    def __init__(self, parent, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
+    def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         super().__init__(parent)
+
+        self.event_bus = event_bus
         self.image_data = image_data
         self.metadata_data = metadata_data
         self.style_data = style_data
+
         self.configure(bg=style_data.bg_color)
 
         self.labels = [{"key": "nom", "title": "Nom", "disable": True},
@@ -34,6 +37,7 @@ class MetadataWidget(tk.Frame):
         for i, label_data in enumerate(self.labels):
             label = tk.Label(self, text="{0} : ".format(label_data["title"]), bg=style_data.bg_tab_color,
                              fg=style_data.font_color)
+
             entry = tk.Entry(self,
                              bg=style_data.bg_tab_color,
                              fg=style_data.font_color,
@@ -43,11 +47,14 @@ class MetadataWidget(tk.Frame):
                              insertbackground=style_data.font_color
                              )
 
-            label.grid(row=i + 1, column=0, sticky="w", padx=5, pady=5)
-            entry.grid(row=i + 1, column=1, sticky="ew", padx=5, pady=5)
+            if label_data["key"] in ["latitude", "longitude"]:
+                entry.bind("<Return>", self.on_validate_coordinates_change)
+                entry.bind("<FocusOut>", self.on_validate_coordinates_change)
 
             entry.bind("<FocusIn>", self.on_focus_in)
-            entry.bind("<FocusOut>", self.on_focus_out)
+
+            label.grid(row=i + 1, column=0, sticky="w", padx=5, pady=5)
+            entry.grid(row=i + 1, column=1, sticky="ew", padx=5, pady=5)
 
             if label_data["disable"]:
                 entry.config(state="disabled",
@@ -68,18 +75,15 @@ class MetadataWidget(tk.Frame):
 
         self.grid_columnconfigure(1, weight=1)
 
-        self.bind("<<ImageUpdated>>", self.update_metadata)
-        self.after(100, self.hook_imagewidget, *())
+        self.event_bus.subscribe("metadata_updated", self.update_metadata)
 
     def on_focus_in(self, event):
         """Changement de bordure quand l'entry reçoit le focus."""
         event.widget.config(highlightbackground=self.style_data.select_color,
                             highlightcolor=self.style_data.select_color)
 
-    def on_focus_out(self, event):
-        """Changement de bordure quand l'entry perd le focus."""
-        event.widget.config(highlightbackground=self.style_data.border_color,
-                            highlightcolor=self.style_data.border_color)
+    def on_validate_coordinates_change(self, event=None):
+        self.event_bus.publish("metadata_updated", "edit")
 
     def reset(self, key, index):
         """Reset la valeur d'un input."""
@@ -90,16 +94,21 @@ class MetadataWidget(tk.Frame):
         if data:
             value = data[index]["value"]
             entry.insert(0, value)
+        self.event_bus.publish("metadata_updated", "open")
 
     def reset_all(self, event=None):
         """Reset la valeur des metadata."""
         for index, entry in enumerate(self.metadata_data.entries.values()):
+            entry.config(state="normal")
             entry.delete(0, tk.END)
 
             data = self.get_data()
             if data:
                 value = data[index]["value"]
                 entry.insert(0, value)
+            if self.labels[index]["disable"]:
+                entry.config(state="disabled")
+        self.event_bus.publish("metadata_updated", "open")
 
     def hook_imagewidget(self):
         # Récupère le widget parent et s'abonne à son événement
@@ -124,11 +133,12 @@ class MetadataWidget(tk.Frame):
                     {"key": "longitude", "value": longitude}, ]
         return None
 
-    def update_metadata(self, event=None):
-        data = self.get_data()
-        if data:
-            self._populate_entries(data)
-        else:
+    def update_metadata(self, publisher):
+        if publisher == "open":
+            data = self.get_data()
+            if data:
+                self._populate_entries(data)
+        elif publisher == "close":
             self._clear_all_entries()
 
     def _populate_entries(self, data):
@@ -149,7 +159,7 @@ class MetadataWidget(tk.Frame):
             entry.config(state="disabled")
 
     def _clear_all_entries(self):
-        for index, (key, entry) in enumerate(self.metadata_data.entries.items()):
+        for index, entry in enumerate(self.metadata_data.entries.values()):
             entry.config(state="normal")
             entry.delete(0, tk.END)
 

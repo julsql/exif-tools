@@ -2,7 +2,9 @@ import tkinter as tk
 from tkinter import PhotoImage
 
 from editor.config_manager import ConfigManager
+from editor.event_bus import EventBus
 from editor.image_widget import ImageWidget
+from editor.map_widget import MapWidget
 from editor.menu import MenuBar
 from editor.metadata_widget import MetadataWidget
 from editor.shared_data import ImageData, StyleData, MetadataData
@@ -38,22 +40,22 @@ class ExifEditorApp:
         self.metadata_data = MetadataData()
         self.style_data = StyleData()
 
+        self.event_bus = EventBus()
+
         self.left_pane = tk.PanedWindow(self.main_pane, orient=tk.VERTICAL)
         self.main_pane.add(self.left_pane)
 
-        self.image_content = ImageWidget(self.left_pane, self.image_data, self.metadata_data, self.style_data)
+        self.image_content = ImageWidget(self.left_pane, self.event_bus, self.image_data, self.metadata_data, self.style_data)
         self.left_pane.add(self.image_content)
 
-        self.metadata_content = MetadataWidget(self.left_pane, self.image_data, self.metadata_data, self.style_data)
+        self.metadata_content = MetadataWidget(self.left_pane, self.event_bus, self.image_data, self.metadata_data, self.style_data)
         self.left_pane.add(self.metadata_content)
 
-        self.right = tk.Frame(self.main_pane, bg="lightgray")
-        self.main_pane.add(self.right)
+        self.right_pane = MapWidget(self.main_pane, self.event_bus, self.image_data, self.metadata_data, self.style_data)
+        self.main_pane.add(self.right_pane)
 
         self.main_pane.bind("<Double-Button-1>", self.reset_main_split)
         self.left_pane.bind("<Double-Button-1>", self.reset_left_split)
-
-        tk.Label(self.right, text="Carte").pack(padx=10, pady=10)
 
         self.menu_bar = MenuBar(root,
                                 self.reset_window,
