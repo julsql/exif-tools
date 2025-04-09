@@ -17,6 +17,7 @@ class StyleData:
         self.border_color = "black"
         self.bg_disable = "lightgray"
         self.fg_disable = "gray"
+        self.font_error_color = "red"
 
         self.marker_circle_color = "blue"
         self.marker_outside_color = "#4285ff"

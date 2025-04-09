@@ -16,6 +16,7 @@ class MetadataWidget(tk.Frame):
         self.image_data = image_data
         self.metadata_data = metadata_data
         self.style_data = style_data
+        self.warning_message = "⚠️ Attention : "
 
         self.configure(bg=style_data.bg_color)
 
@@ -51,6 +52,10 @@ class MetadataWidget(tk.Frame):
                 entry.bind("<Return>", self.on_validate_coordinates_change)
                 entry.bind("<FocusOut>", self.on_validate_coordinates_change)
 
+            if label_data["key"] in ["date_creation"]:
+                entry.bind("<Return>", self.on_validate_date_change)
+                entry.bind("<FocusOut>", self.on_validate_date_change)
+
             entry.bind("<FocusIn>", self.on_focus_in)
 
             label.grid(row=i + 1, column=0, sticky="w", padx=5, pady=5)
@@ -73,6 +78,9 @@ class MetadataWidget(tk.Frame):
 
             self.metadata_data.entries[label_data["key"]] = entry
 
+        self.errorLabel = tk.Label(self, text="", bg=style_data.bg_tab_color, fg=style_data.font_error_color)
+        self.errorLabel.grid(row=len(self.labels) + 2, column=0, columnspan=3, sticky="we", padx=5, pady=5)
+
         self.grid_columnconfigure(1, weight=1)
 
         self.event_bus.subscribe("metadata_updated", self.update_metadata)
@@ -83,7 +91,31 @@ class MetadataWidget(tk.Frame):
                             highlightcolor=self.style_data.select_color)
 
     def on_validate_coordinates_change(self, event=None):
-        self.event_bus.publish("metadata_updated", "edit")
+        if self.coordinates_valid():
+            self.event_bus.publish("metadata_updated", "edit")
+        else:
+            self.errorLabel.configure(text=self.warning_message + "Coordonnées invalides")
+
+    def on_validate_date_change(self, event=None):
+        if not self.date_valid():
+            self.errorLabel.configure(text=self.warning_message + "Date invalide")
+
+    def coordinates_valid(self):
+        try:
+            lat = float(self.metadata_data.entries["latitude"].get())
+            lon = float(self.metadata_data.entries["longitude"].get())
+        except (ValueError, TypeError):
+            return False
+
+        return -90 <= lat <= 90 and -180 <= lon <= 180
+
+    def date_valid(self):
+        try:
+            date_create_str = self.metadata_data.entries["date_creation"].get()
+            datetime.strptime(date_create_str, self.style_data.displayed_date_format)
+            return True
+        except (ValueError, TypeError):
+            return False
 
     def reset(self, key, index):
         """Reset la valeur d'un input."""
@@ -134,6 +166,7 @@ class MetadataWidget(tk.Frame):
         return None
 
     def update_metadata(self, publisher):
+        self.errorLabel.configure(text="")
         if publisher == "open":
             data = self.get_data()
             if data:
