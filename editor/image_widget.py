@@ -1,3 +1,5 @@
+import os
+import shutil
 import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog
@@ -71,12 +73,13 @@ class ImageWidget(tk.Frame):
         button_event = "<Button-1>"
 
         self.icon_label1.bind(button_event, self.save)
+        self.icon_label2.bind(button_event, self.save_as)
         self.icon_label3.bind(button_event, self.open_file_dialog)
         self.icon_label4.bind(button_event, self.close_image)
 
         self.loaded_image = None
 
-    def save(self, event=None):
+    def save_data(self, new_path=None):
         image = self.image_data.pil_image
         path = self.image_data.image_path
 
@@ -94,10 +97,34 @@ class ImageWidget(tk.Frame):
         longitude = self._parse_coordinate(longitude_str)
 
         # Mettre à jour les métadonnées EXIF
-        exif_bytes = self._update_exif_metadata(image, date, latitude, longitude)
-
         if date or latitude or longitude:
+            exif_bytes = self._update_exif_metadata(image, date, latitude, longitude)
+            if new_path:
+                path = new_path
             piexif.insert(exif_bytes, path)
+
+    def save_as(self, event=None):
+        if self.image_data.pil_image is None or self.image_data.image_path is None:
+            return
+
+        path = self.image_data.image_path
+        (filename, ext) = os.path.splitext(os.path.basename(path))
+
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=ext,
+            filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
+            initialfile=f'{filename}-copy{ext}',
+            title="Enregistrer l'image sous..."
+        )
+
+        if file_path:
+            shutil.copy2(self.image_data.image_path, file_path)
+            self.save_data(file_path)
+
+    def save(self, event=None):
+        if self.image_data.pil_image is None:
+            return
+        self.save_data()
 
     def _parse_date(self, date_str):
         try:
