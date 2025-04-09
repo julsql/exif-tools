@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import PhotoImage
 
@@ -15,6 +16,7 @@ class ExifEditorApp:
         self.default_height = 800
         self.default_width = 1200
         self.default_geometry = f"{self.default_width}x{self.default_height}"
+        self.default_app_title = "Éditeur Exif"
 
         self.root = root
         icon = PhotoImage(file="./assets/icon.png")
@@ -31,7 +33,7 @@ class ExifEditorApp:
         else:
             root.geometry(self.default_geometry)
 
-        root.title("Éditeur Exif")
+        root.title(self.default_app_title)
 
         self.main_pane = tk.PanedWindow(root, orient=tk.HORIZONTAL)
         self.main_pane.pack(fill=tk.BOTH, expand=True)
@@ -66,8 +68,17 @@ class ExifEditorApp:
         self.resize_after_id = None
         root.bind("<Configure>", self.on_resize)
 
+        self.event_bus.subscribe("metadata_updated", self.update)
+
         root.after(100, self.restore_split)
         root.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def update(self, publisher):
+        if publisher == "open":
+            basename = os.path.basename(self.image_data.image_path)
+            self.root.title(basename)
+        elif publisher == "close":
+            self.root.title(self.default_app_title)
 
     def reset_main_split(self, event):
         self.main_pane.sash_place(0, self.vertical_default_ratio(), 0)
