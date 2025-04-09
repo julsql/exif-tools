@@ -55,6 +55,8 @@ class MapWidget(tk.Frame):
         return latitude, longitude
 
     def add_marker_event(self, coords, origin=False):
+        self.event_bus.publish("metadata_updated", "add_marker")
+
         if coords:
             if origin:
                 self.delete_markers()
