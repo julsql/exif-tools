@@ -14,3 +14,37 @@ Pour lancer l'application, lancer dans un terminal :
 pip install -r requirements.txt
 python3 main.py
 ```
+
+## Build l'application pour la déployer
+
+### Faire l'exécutable linux
+
+Dans une machine linux (ou VM)
+
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed --name "ExifTools" --hidden-import=piexif --hidden-import=PIL._tkinter_finder --add-data "assets:assets" main.py
+```
+
+### Faire l'application linux
+
+Armature 64
+
+```bash
+chmod +x ./install-arm64.sh
+./install-arm64.sh
+```
+
+Autre
+
+```bash
+chmod +x ./install-all.sh
+./install-all.sh
+```
+
+Désinstaller
+
+```bash
+chmod +x ./uninstall.sh
+./uninstall.sh
+```
