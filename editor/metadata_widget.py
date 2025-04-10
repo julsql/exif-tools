@@ -9,6 +9,16 @@ from editor.shared_data import ImageData, StyleData, MetadataData
 
 
 class MetadataWidget(tk.Frame):
+    WARNING_MESSAGE = "⚠️ Attention : "
+    LABELS = [{"key": "nom", "title": "Nom", "disable": True},
+              {"key": "format", "title": "Format", "disable": True},
+              {"key": "poids", "title": "Poids", "disable": True},
+              {"key": "dimensions", "title": "Dimensions (lxH)", "disable": True},
+              {"key": "date_creation", "title": "Date de création", "disable": False},
+              {"key": "date_modification", "title": "Date de modification", "disable": True},
+              {"key": "latitude", "title": "Latitude", "disable": False},
+              {"key": "longitude", "title": "Longitude", "disable": False}]
+
     def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         super().__init__(parent)
 
@@ -16,36 +26,26 @@ class MetadataWidget(tk.Frame):
         self.image_data = image_data
         self.metadata_data = metadata_data
         self.style_data = style_data
-        self.warning_message = "⚠️ Attention : "
 
-        self.configure(bg=style_data.bg_color)
-
-        self.labels = [{"key": "nom", "title": "Nom", "disable": True},
-                       {"key": "format", "title": "Format", "disable": True},
-                       {"key": "poids", "title": "Poids", "disable": True},
-                       {"key": "dimensions", "title": "Dimensions (lxH)", "disable": True},
-                       {"key": "date_creation", "title": "Date de création", "disable": False},
-                       {"key": "date_modification", "title": "Date de modification", "disable": True},
-                       {"key": "latitude", "title": "Latitude", "disable": False},
-                       {"key": "longitude", "title": "Longitude", "disable": False}]
+        self.configure(bg=style_data.BG_COLOR)
 
         assets_path = "./assets/"
-        self.reset_icon = load_icon(f"{assets_path}/{style_data.mode}/reset.png", 20)
-        self.reset_button = tk.Label(self, image=self.reset_icon, bg=style_data.bg_tab_color, padx=0)
+        self.reset_icon = load_icon(f"{assets_path}/{style_data.MODE}/reset.png", 20)
+        self.reset_button = tk.Label(self, image=self.reset_icon, bg=style_data.BG_TAB_COLOR, padx=0)
         self.reset_button.grid(row=0, column=0, sticky="w")
         self.reset_button.bind("<Button-1>", self.reset_all)
 
-        for i, label_data in enumerate(self.labels):
-            label = tk.Label(self, text="{0} : ".format(label_data["title"]), bg=style_data.bg_tab_color,
-                             fg=style_data.font_color)
+        for i, label_data in enumerate(self.LABELS):
+            label = tk.Label(self, text="{0} : ".format(label_data["title"]), bg=style_data.BG_TAB_COLOR,
+                             fg=style_data.FONT_COLOR)
 
             entry = tk.Entry(self,
-                             bg=style_data.bg_tab_color,
-                             fg=style_data.font_color,
+                             bg=style_data.BG_TAB_COLOR,
+                             fg=style_data.FONT_COLOR,
                              bd=1,
                              highlightthickness=1,
                              relief="flat",
-                             insertbackground=style_data.font_color
+                             insertbackground=style_data.FONT_COLOR
                              )
 
             if label_data["key"] in ["latitude", "longitude"]:
@@ -63,23 +63,23 @@ class MetadataWidget(tk.Frame):
 
             if label_data["disable"]:
                 entry.config(state="disabled",
-                             disabledforeground=style_data.fg_disable,
-                             disabledbackground=style_data.bg_disable)
+                             disabledforeground=style_data.FG_DISABLE,
+                             disabledbackground=style_data.BG_DISABLE)
             else:
                 btn_reset = tk.Button(self,
                                       text="✖",
                                       command=lambda local_key=label_data["key"], index=i: self.reset(local_key, index),
-                                      bg=style_data.bg_color,
-                                      fg=style_data.font_color,
+                                      bg=style_data.BG_COLOR,
+                                      fg=style_data.FONT_COLOR,
                                       highlightthickness=0,
-                                      highlightbackground=style_data.bg_color,
+                                      highlightbackground=style_data.BG_COLOR,
                                       relief="flat")
                 btn_reset.grid(row=i + 1, column=2, padx=5, pady=5)
 
             self.metadata_data.entries[label_data["key"]] = entry
 
-        self.errorLabel = tk.Label(self, text="", bg=style_data.bg_tab_color, fg=style_data.font_error_color)
-        self.errorLabel.grid(row=len(self.labels) + 2, column=0, columnspan=3, sticky="we", padx=5, pady=5)
+        self.errorLabel = tk.Label(self, text="", bg=style_data.BG_TAB_COLOR, fg=style_data.FONT_ERROR_COLOR)
+        self.errorLabel.grid(row=len(self.LABELS) + 2, column=0, columnspan=3, sticky="we", padx=5, pady=5)
 
         self.grid_columnconfigure(1, weight=1)
 
@@ -87,18 +87,18 @@ class MetadataWidget(tk.Frame):
 
     def on_focus_in(self, event):
         """Changement de bordure quand l'entry reçoit le focus."""
-        event.widget.config(highlightbackground=self.style_data.select_color,
-                            highlightcolor=self.style_data.select_color)
+        event.widget.config(highlightbackground=self.style_data.SELECT_COLOR,
+                            highlightcolor=self.style_data.SELECT_COLOR)
 
     def on_validate_coordinates_change(self, event=None):
         if self.coordinates_valid():
             self.event_bus.publish("metadata_updated", "edit")
         else:
-            self.errorLabel.configure(text=self.warning_message + "Coordonnées invalides")
+            self.errorLabel.configure(text=self.WARNING_MESSAGE + "Coordonnées invalides")
 
     def on_validate_date_change(self, event=None):
         if not self.date_valid():
-            self.errorLabel.configure(text=self.warning_message + "Date invalide")
+            self.errorLabel.configure(text=self.WARNING_MESSAGE + "Date invalide")
 
     def coordinates_valid(self):
         try:
@@ -112,7 +112,7 @@ class MetadataWidget(tk.Frame):
     def date_valid(self):
         try:
             date_create_str = self.metadata_data.entries["date_creation"].get()
-            datetime.strptime(date_create_str, self.style_data.displayed_date_format)
+            datetime.strptime(date_create_str, self.style_data.DISPLAYED_DATE_FORMAT)
             return True
         except (ValueError, TypeError):
             return False
@@ -138,7 +138,7 @@ class MetadataWidget(tk.Frame):
             if data:
                 value = data[index]["value"]
                 entry.insert(0, value)
-            if self.labels[index]["disable"]:
+            if self.LABELS[index]["disable"]:
                 entry.config(state="disabled")
         self.event_bus.publish("metadata_updated", "open")
 
@@ -158,8 +158,8 @@ class MetadataWidget(tk.Frame):
                     {"key": "format", "value": get_format(image)},
                     {"key": "poids", "value": get_poids(path)},
                     {"key": "dimensions", "value": get_size(image)},
-                    {"key": "date_creation", "value": get_date_taken(image, self.style_data.exif_date_format,
-                                                                     self.style_data.displayed_date_format)},
+                    {"key": "date_creation", "value": get_date_taken(image, self.style_data.EXIF_DATE_FORMAT,
+                                                                     self.style_data.DISPLAYED_DATE_FORMAT)},
                     {"key": "date_modification", "value": get_date_modify(path)},
                     {"key": "latitude", "value": latitude},
                     {"key": "longitude", "value": longitude}, ]
@@ -188,7 +188,7 @@ class MetadataWidget(tk.Frame):
         entry.delete(0, tk.END)
         entry.insert(0, value)
 
-        if self.labels[index]["disable"]:
+        if self.LABELS[index]["disable"]:
             entry.config(state="disabled")
 
     def _clear_all_entries(self):
@@ -196,7 +196,7 @@ class MetadataWidget(tk.Frame):
             entry.config(state="normal")
             entry.delete(0, tk.END)
 
-            if self.labels[index]["disable"]:
+            if self.LABELS[index]["disable"]:
                 entry.config(state="disabled")
 
 

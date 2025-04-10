@@ -6,10 +6,10 @@ from editor.shared_data import MetadataData, StyleData, ImageData
 
 
 class MapWidget(tk.Frame):
+    COORDINATES_PARIS = (48.8566, 2.3522)
+
     def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         super().__init__(parent)
-
-        self.paris = (48.8566, 2.3522)
 
         self.event_bus = event_bus
         self.image_data = image_data
@@ -20,7 +20,7 @@ class MapWidget(tk.Frame):
         self.map = tkintermapview.TkinterMapView(self, width=800, height=600)
         self.map.pack(fill="both", expand=True)
 
-        self.map.set_position(*self.paris)
+        self.map.set_position(*self.COORDINATES_PARIS)
         self.map.set_zoom(5)
         self.origin_marker = None
         self.new_marker = None
@@ -30,7 +30,7 @@ class MapWidget(tk.Frame):
         self.event_bus.subscribe("metadata_updated", self.update_origin)
 
     def delete_markers(self):
-        self.map.set_position(*self.paris)
+        self.map.set_position(*self.COORDINATES_PARIS)
         if self.origin_marker:
             self.origin_marker.delete()
         if self.new_marker:
@@ -74,7 +74,7 @@ class MapWidget(tk.Frame):
                     self.metadata_data.entries["longitude"].insert(0, coords[1])
 
                     self.new_marker = self.map.set_marker(coords[0],
-                                    coords[1],
-                                    text="Nouvelle",
-                                    marker_color_circle=self.style_data.marker_circle_color,
-                                    marker_color_outside=self.style_data.marker_outside_color)
+                                                          coords[1],
+                                                          text="Nouvelle",
+                                                          marker_color_circle=self.style_data.MARKER_CIRCLE_COLOR,
+                                                          marker_color_outside=self.style_data.MARKER_OUTSIDE_COLOR)
