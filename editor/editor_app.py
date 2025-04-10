@@ -12,12 +12,12 @@ from editor.shared_data import ImageData, StyleData, MetadataData
 
 
 class ExifEditorApp:
-    def __init__(self, root):
-        self.default_height = 800
-        self.default_width = 1200
-        self.default_geometry = f"{self.default_width}x{self.default_height}"
-        self.default_app_title = "Éditeur Exif"
+    DEFAULT_HEIGHT = 800
+    DEFAULT_WIDTH = 1200
+    DEFAULT_GEOMETRY = f"{DEFAULT_WIDTH}x{DEFAULT_HEIGHT}"
+    DEFAULT_APP_TITLE = "Éditeur Exif"
 
+    def __init__(self, root):
         self.root = root
         icon = PhotoImage(file="./assets/icon.png")
 
@@ -31,9 +31,9 @@ class ExifEditorApp:
         if geometry:
             root.geometry(geometry)
         else:
-            root.geometry(self.default_geometry)
+            root.geometry(self.DEFAULT_GEOMETRY)
 
-        root.title(self.default_app_title)
+        root.title(self.DEFAULT_APP_TITLE)
 
         self.main_pane = tk.PanedWindow(root, orient=tk.HORIZONTAL)
         self.main_pane.pack(fill=tk.BOTH, expand=True)
@@ -78,7 +78,7 @@ class ExifEditorApp:
             basename = os.path.basename(self.image_data.image_path)
             self.root.title(basename)
         elif publisher == "close":
-            self.root.title(self.default_app_title)
+            self.root.title(self.DEFAULT_APP_TITLE)
 
     def reset_main_split(self, event):
         self.main_pane.sash_place(0, self.vertical_default_ratio(), 0)
@@ -96,20 +96,20 @@ class ExifEditorApp:
         self.left_pane.sash_place(0, 0, self.horizontal_default_ratio())
 
     def reset_window(self):
-        self.root.geometry(self.default_geometry)
+        self.root.geometry(self.DEFAULT_GEOMETRY)
 
-        self.main_pane.sash_place(0, self.vertical_default_ratio(self.default_width), 0)
-        self.left_pane.sash_place(0, 0, self.horizontal_default_ratio(self.default_height))
+        self.main_pane.sash_place(0, self.vertical_default_ratio(self.DEFAULT_WIDTH), 0)
+        self.left_pane.sash_place(0, 0, self.horizontal_default_ratio(self.DEFAULT_HEIGHT))
 
         # Supprime la config sauvegardée pour que ça redémarre proprement
         self.config.set("main_split", self.vertical_default_ratio())
         self.config.set("left_split", self.horizontal_default_ratio())
-        self.config.set("geometry", self.default_geometry)
+        self.config.set("geometry", self.DEFAULT_GEOMETRY)
         self.config.save()
 
     def restore_split(self):
-        main_x = self.config.get("main_split", self.vertical_default_ratio(self.default_width))
-        left_y = self.config.get("left_split", self.horizontal_default_ratio(self.default_height))
+        main_x = self.config.get("main_split", self.vertical_default_ratio(self.DEFAULT_WIDTH))
+        left_y = self.config.get("left_split", self.horizontal_default_ratio(self.DEFAULT_HEIGHT))
 
         self.left_pane.sash_place(0, 0, left_y)
         self.main_pane.sash_place(0, main_x, 0)

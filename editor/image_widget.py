@@ -32,34 +32,34 @@ class ImageWidget(tk.Frame):
         self.style_data = style_data
 
         self.parent = parent
-        self.configure(bg=style_data.bg_color)
+        self.configure(bg=style_data.BG_COLOR)
 
         # Créer la partie supérieure (40px de haut)
-        self.top_frame = tk.Frame(self, height=20, bg=style_data.bg_tab_color)
+        self.top_frame = tk.Frame(self, height=20, bg=style_data.BG_TAB_COLOR)
         self.top_frame.grid(row=0, column=0, sticky="ew")
 
-        self.bottom_border_frame = tk.Frame(self, height=1, bg=style_data.border_color)
+        self.bottom_border_frame = tk.Frame(self, height=1, bg=style_data.BORDER_COLOR)
         self.bottom_border_frame.grid(row=1, column=0, sticky="ew")
 
         # Ajouter les icônes à gauche
-        self.save_icon = load_icon(f"{assets_path}/{style_data.mode}/save.png", icon_height)
-        self.save_as_icon = load_icon(f"{assets_path}/{style_data.mode}/save_as.png", icon_height)
-        self.add_photo_icon = load_icon(f"{assets_path}/{style_data.mode}/folder_open.png", icon_height)
-        self.close_icon = load_icon(f"{assets_path}/{style_data.mode}/close.png", icon_height)
+        self.save_icon = load_icon(f"{assets_path}/{style_data.MODE}/save.png", icon_height)
+        self.save_as_icon = load_icon(f"{assets_path}/{style_data.MODE}/save_as.png", icon_height)
+        self.add_photo_icon = load_icon(f"{assets_path}/{style_data.MODE}/folder_open.png", icon_height)
+        self.close_icon = load_icon(f"{assets_path}/{style_data.MODE}/close.png", icon_height)
 
-        self.icon_label1 = tk.Label(self.top_frame, image=self.save_icon, bg=style_data.bg_tab_color)
+        self.icon_label1 = tk.Label(self.top_frame, image=self.save_icon, bg=style_data.BG_TAB_COLOR)
         self.icon_label1.grid(row=0, column=0, padx=icon_padding)
 
-        self.icon_label2 = tk.Label(self.top_frame, image=self.save_as_icon, bg=style_data.bg_tab_color)
+        self.icon_label2 = tk.Label(self.top_frame, image=self.save_as_icon, bg=style_data.BG_TAB_COLOR)
         self.icon_label2.grid(row=0, column=1, padx=icon_padding)
 
-        self.icon_label3 = tk.Label(self.top_frame, image=self.add_photo_icon, bg=style_data.bg_tab_color)
+        self.icon_label3 = tk.Label(self.top_frame, image=self.add_photo_icon, bg=style_data.BG_TAB_COLOR)
         self.icon_label3.grid(row=0, column=2, padx=icon_padding)
 
-        self.icon_label4 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.bg_tab_color)
+        self.icon_label4 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.BG_TAB_COLOR)
         self.icon_label4.grid(row=0, column=3, padx=icon_padding, sticky="e")
 
-        self.image_area = tk.Label(self, bg=style_data.bg_color)
+        self.image_area = tk.Label(self, bg=style_data.BG_COLOR)
         self.image_area.grid(row=2, column=0, sticky="nsew")
 
         self.top_frame.grid_columnconfigure(0, weight=0)
@@ -129,8 +129,8 @@ class ImageWidget(tk.Frame):
     def _parse_date(self, date_str):
         try:
             return datetime.strptime(
-                date_str, self.style_data.displayed_date_format
-            ).strftime(self.style_data.exif_date_format)
+                date_str, self.style_data.DISPLAYED_DATE_FORMAT
+            ).strftime(self.style_data.EXIF_DATE_FORMAT)
         except ValueError:
             print("Format de date incorrect")
             return None

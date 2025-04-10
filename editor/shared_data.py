@@ -9,20 +9,16 @@ class MetadataData:
         self.entries = {}
 
 class StyleData:
-    def __init__(self):
-        self.bg_color = "white"
-        self.font_color = "black"
-        self.bg_tab_color = "white"
-        self.select_color = "black"
-        self.border_color = "black"
-        self.bg_disable = "lightgray"
-        self.fg_disable = "gray"
-        self.font_error_color = "red"
-
-        self.marker_circle_color = "blue"
-        self.marker_outside_color = "#4285ff"
-
-        self.mode = "dark"
-
-        self.exif_date_format = '%Y:%m:%d %H:%M:%S'
-        self.displayed_date_format = '%Y-%m-%d %H:%M:%S'
+    BG_COLOR = "white"
+    FONT_COLOR = "black"
+    BG_TAB_COLOR = "white"
+    SELECT_COLOR = "black"
+    BORDER_COLOR = "black"
+    BG_DISABLE = "lightgray"
+    FG_DISABLE = "gray"
+    FONT_ERROR_COLOR = "red"
+    MARKER_CIRCLE_COLOR = "blue"
+    MARKER_OUTSIDE_COLOR = "#4285ff"
+    MODE = "dark"
+    EXIF_DATE_FORMAT = '%Y:%m:%d %H:%M:%S'
+    DISPLAYED_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
