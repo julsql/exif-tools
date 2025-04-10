@@ -22,7 +22,7 @@ def load_icon(file_path, height):
 class ImageWidget(tk.Frame):
     def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         assets_path = "./assets/"
-        icon_padding = 1
+        icon_padding = 4
         icon_height = 20
 
         super().__init__(parent)
@@ -34,7 +34,6 @@ class ImageWidget(tk.Frame):
         self.parent = parent
         self.configure(bg=style_data.BG_COLOR)
 
-        # Créer la partie supérieure (40px de haut)
         self.top_frame = tk.Frame(self, height=20, bg=style_data.BG_TAB_COLOR)
         self.top_frame.grid(row=0, column=0, sticky="ew")
 
@@ -59,8 +58,9 @@ class ImageWidget(tk.Frame):
         self.icon_label4 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.BG_TAB_COLOR)
         self.icon_label4.grid(row=0, column=3, padx=icon_padding, sticky="e")
 
+        # Zone d'affichage de l'image
         self.image_area = tk.Label(self, bg=style_data.BG_COLOR)
-        self.image_area.grid(row=2, column=0, sticky="nsew")
+        self.image_area.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
 
         self.top_frame.grid_columnconfigure(0, weight=0)
         self.top_frame.grid_columnconfigure(1, weight=0)
@@ -70,8 +70,8 @@ class ImageWidget(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(2, weight=1)
 
+        # Lier les actions
         button_event = "<Button-1>"
-
         self.icon_label1.bind(button_event, self.save)
         self.icon_label2.bind(button_event, self.save_as)
         self.icon_label3.bind(button_event, self.open_file_dialog)

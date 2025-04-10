@@ -19,8 +19,13 @@ class ExifEditorApp:
 
     def __init__(self, root):
         self.root = root
-        icon = PhotoImage(file="./assets/icon.png")
+        self.image_data = ImageData()
+        self.metadata_data = MetadataData()
+        self.style_data = StyleData()
 
+        self.root.configure(bg=self.style_data.BG_COLOR)
+
+        icon = PhotoImage(file="./assets/icon.png")
         root.iconphoto(True, icon)
 
         self.config = ConfigManager()
@@ -35,25 +40,24 @@ class ExifEditorApp:
 
         root.title(self.DEFAULT_APP_TITLE)
 
-        self.main_pane = tk.PanedWindow(root, orient=tk.HORIZONTAL)
+        self.main_pane = tk.PanedWindow(root, orient=tk.HORIZONTAL, bg=self.style_data.BORDER_COLOR)
         self.main_pane.pack(fill=tk.BOTH, expand=True)
-
-        self.image_data = ImageData()
-        self.metadata_data = MetadataData()
-        self.style_data = StyleData()
 
         self.event_bus = EventBus()
 
-        self.left_pane = tk.PanedWindow(self.main_pane, orient=tk.VERTICAL)
+        self.left_pane = tk.PanedWindow(self.main_pane, orient=tk.VERTICAL, bg=self.style_data.BORDER_COLOR)
         self.main_pane.add(self.left_pane)
 
-        self.image_content = ImageWidget(self.left_pane, self.event_bus, self.image_data, self.metadata_data, self.style_data)
+        self.image_content = ImageWidget(self.left_pane, self.event_bus, self.image_data, self.metadata_data,
+                                         self.style_data)
         self.left_pane.add(self.image_content)
 
-        self.metadata_content = MetadataWidget(self.left_pane, self.event_bus, self.image_data, self.metadata_data, self.style_data)
+        self.metadata_content = MetadataWidget(self.left_pane, self.event_bus, self.image_data, self.metadata_data,
+                                               self.style_data)
         self.left_pane.add(self.metadata_content)
 
-        self.right_pane = MapWidget(self.main_pane, self.event_bus, self.image_data, self.metadata_data, self.style_data)
+        self.right_pane = MapWidget(self.main_pane, self.event_bus, self.image_data, self.metadata_data,
+                                    self.style_data)
         self.main_pane.add(self.right_pane)
 
         self.main_pane.bind("<Double-Button-1>", self.reset_main_split)

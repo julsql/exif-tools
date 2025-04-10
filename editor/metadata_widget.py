@@ -1,6 +1,7 @@
 import os
 import tkinter as tk
 from datetime import datetime
+from tkinter import ttk
 
 import piexif
 
@@ -20,8 +21,12 @@ class MetadataWidget(tk.Frame):
               {"key": "longitude", "title": "Longitude", "disable": False}]
 
     def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
-        super().__init__(parent)
+        button_event = "<Button-1>"
+        focus_in_event = "<FocusIn>"
+        focus_out_event = "<FocusOut>"
+        enter_event = "<Return>"
 
+        super().__init__(parent)
         self.event_bus = event_bus
         self.image_data = image_data
         self.metadata_data = metadata_data
@@ -29,34 +34,48 @@ class MetadataWidget(tk.Frame):
 
         self.configure(bg=style_data.BG_COLOR)
 
+        style = ttk.Style(self)
+        style.theme_use("default")
+        style.configure("Reset.TButton",
+                        background=style_data.BUTTON_COLOR,
+                        foreground=style_data.FONT_COLOR,
+                        borderwidth=0,
+                        focusthickness=0,
+                        padding=2)
+
+        style.map("Reset.TButton",
+                  background=[('active', style_data.BUTTON_HOVER_COLOR)])
+
         assets_path = "./assets/"
         self.reset_icon = load_icon(f"{assets_path}/{style_data.MODE}/reset.png", 20)
-        self.reset_button = tk.Label(self, image=self.reset_icon, bg=style_data.BG_TAB_COLOR, padx=0)
+        self.reset_button = tk.Label(self, image=self.reset_icon, bg=style_data.BG_COLOR, padx=0)
         self.reset_button.grid(row=0, column=0, sticky="w")
-        self.reset_button.bind("<Button-1>", self.reset_all)
+        self.reset_button.bind(button_event, self.reset_all)
 
         for i, label_data in enumerate(self.LABELS):
-            label = tk.Label(self, text="{0} : ".format(label_data["title"]), bg=style_data.BG_TAB_COLOR,
-                             fg=style_data.FONT_COLOR)
+            label = tk.Label(self, text="{0} : ".format(label_data["title"]), bg=style_data.BG_COLOR,
+                             fg=style_data.FONT_COLOR, font=style_data.FONT)
 
             entry = tk.Entry(self,
-                             bg=style_data.BG_TAB_COLOR,
+                             bg=style_data.BG_COLOR,
                              fg=style_data.FONT_COLOR,
+                             highlightbackground=self.style_data.BORDER_COLOR,
                              bd=1,
                              highlightthickness=1,
                              relief="flat",
-                             insertbackground=style_data.FONT_COLOR
-                             )
+                             insertbackground=style_data.FONT_COLOR,
+                             font=style_data.FONT)
 
             if label_data["key"] in ["latitude", "longitude"]:
-                entry.bind("<Return>", self.on_validate_coordinates_change)
-                entry.bind("<FocusOut>", self.on_validate_coordinates_change)
+                entry.bind(enter_event, self.on_validate_coordinates_change)
+                entry.bind(focus_out_event, self.on_validate_coordinates_change)
 
             if label_data["key"] in ["date_creation"]:
                 entry.bind("<Return>", self.on_validate_date_change)
-                entry.bind("<FocusOut>", self.on_validate_date_change)
+                entry.bind(focus_out_event, self.on_validate_date_change_focus_out)
 
-            entry.bind("<FocusIn>", self.on_focus_in)
+            entry.bind(focus_in_event, self.on_focus_in)
+            entry.bind(focus_out_event, self.on_focus_out)
 
             label.grid(row=i + 1, column=0, sticky="w", padx=5, pady=5)
             entry.grid(row=i + 1, column=1, sticky="ew", padx=5, pady=5)
@@ -66,19 +85,18 @@ class MetadataWidget(tk.Frame):
                              disabledforeground=style_data.FG_DISABLE,
                              disabledbackground=style_data.BG_DISABLE)
             else:
-                btn_reset = tk.Button(self,
-                                      text="✖",
-                                      command=lambda local_key=label_data["key"], index=i: self.reset(local_key, index),
-                                      bg=style_data.BG_COLOR,
-                                      fg=style_data.FONT_COLOR,
-                                      highlightthickness=0,
-                                      highlightbackground=style_data.BG_COLOR,
-                                      relief="flat")
+                btn_reset = ttk.Button(self,
+                                       text="✖",
+                                       width=3,
+                                       command=
+                                       lambda local_key=label_data["key"], index=i: self.reset(local_key, index),
+                                       style="Reset.TButton")
                 btn_reset.grid(row=i + 1, column=2, padx=5, pady=5)
 
             self.metadata_data.entries[label_data["key"]] = entry
 
-        self.errorLabel = tk.Label(self, text="", bg=style_data.BG_TAB_COLOR, fg=style_data.FONT_ERROR_COLOR)
+        self.errorLabel = tk.Label(self, text="", bg=style_data.BG_COLOR, fg=style_data.FONT_ERROR_COLOR,
+                                   font=style_data.FONT)
         self.errorLabel.grid(row=len(self.LABELS) + 2, column=0, columnspan=3, sticky="we", padx=5, pady=5)
 
         self.grid_columnconfigure(1, weight=1)
@@ -90,15 +108,27 @@ class MetadataWidget(tk.Frame):
         event.widget.config(highlightbackground=self.style_data.SELECT_COLOR,
                             highlightcolor=self.style_data.SELECT_COLOR)
 
+    def on_focus_out(self, event):
+        """Changement de bordure quand l'entry reçoit le focus."""
+        event.widget.config(highlightbackground=self.style_data.BORDER_COLOR,
+                            highlightcolor=self.style_data.BG_COLOR)
+
     def on_validate_coordinates_change(self, event=None):
         if self.coordinates_valid():
+            self.errorLabel.configure(text="")
             self.event_bus.publish("metadata_updated", "edit")
         else:
             self.errorLabel.configure(text=self.WARNING_MESSAGE + "Coordonnées invalides")
 
     def on_validate_date_change(self, event=None):
-        if not self.date_valid():
+        if self.date_valid():
+            self.errorLabel.configure(text="")
+        else :
             self.errorLabel.configure(text=self.WARNING_MESSAGE + "Date invalide")
+
+    def on_validate_date_change_focus_out(self, event=None):
+        self.on_focus_out(event)
+        self.on_validate_date_change(event)
 
     def coordinates_valid(self):
         try:
