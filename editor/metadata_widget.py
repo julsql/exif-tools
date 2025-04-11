@@ -5,6 +5,7 @@ from tkinter import ttk
 
 import piexif
 
+from editor import resource_path
 from editor.image_widget import load_icon
 from editor.shared_data import ImageData, StyleData, MetadataData
 
@@ -46,8 +47,8 @@ class MetadataWidget(tk.Frame):
         style.map("Reset.TButton",
                   background=[('active', style_data.BUTTON_HOVER_COLOR)])
 
-        assets_path = "./assets/"
-        self.reset_icon = load_icon(f"{assets_path}/{style_data.MODE}/reset.png", 20)
+        assets_path = resource_path("assets/")
+        self.reset_icon = load_icon(os.path.join(assets_path, style_data.MODE, "reset.png"), 20)
         self.reset_button = tk.Label(self, image=self.reset_icon, bg=style_data.BG_COLOR, padx=0)
         self.reset_button.grid(row=0, column=0, sticky="w")
         self.reset_button.bind(button_event, self.reset_all)
