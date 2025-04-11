@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 from tkinter import PhotoImage
 
+from editor import resource_path
 from editor.config_manager import ConfigManager
 from editor.event_bus import EventBus
 from editor.image_widget import ImageWidget
@@ -25,7 +26,7 @@ class ExifEditorApp:
 
         self.root.configure(bg=self.style_data.BG_COLOR)
 
-        icon = PhotoImage(file="./assets/icon.png")
+        icon = PhotoImage(file=resource_path("assets/icon.png"))
         root.iconphoto(True, icon)
 
         self.config = ConfigManager()

@@ -7,6 +7,7 @@ from tkinter import filedialog
 import piexif
 from PIL import Image, ImageTk
 
+from editor import resource_path
 from editor.shared_data import ImageData, StyleData, MetadataData
 
 
@@ -21,7 +22,7 @@ def load_icon(file_path, height):
 
 class ImageWidget(tk.Frame):
     def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
-        assets_path = "./assets/"
+        assets_path = resource_path("assets/")
         icon_padding = 4
         icon_height = 20
 
@@ -41,10 +42,10 @@ class ImageWidget(tk.Frame):
         self.bottom_border_frame.grid(row=1, column=0, sticky="ew")
 
         # Ajouter les icônes à gauche
-        self.save_icon = load_icon(f"{assets_path}/{style_data.MODE}/save.png", icon_height)
-        self.save_as_icon = load_icon(f"{assets_path}/{style_data.MODE}/save_as.png", icon_height)
-        self.add_photo_icon = load_icon(f"{assets_path}/{style_data.MODE}/folder_open.png", icon_height)
-        self.close_icon = load_icon(f"{assets_path}/{style_data.MODE}/close.png", icon_height)
+        self.save_icon = load_icon(os.path.join(assets_path, style_data.MODE, "save.png"), icon_height)
+        self.save_as_icon = load_icon(os.path.join(assets_path, style_data.MODE, "save_as.png"), icon_height)
+        self.add_photo_icon = load_icon(os.path.join(assets_path, style_data.MODE, "folder_open.png"), icon_height)
+        self.close_icon = load_icon(os.path.join(assets_path, style_data.MODE, "close.png"), icon_height)
 
         self.icon_label1 = tk.Label(self.top_frame, image=self.save_icon, bg=style_data.BG_TAB_COLOR)
         self.icon_label1.grid(row=0, column=0, padx=icon_padding)
