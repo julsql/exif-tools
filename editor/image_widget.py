@@ -8,6 +8,7 @@ import piexif
 from PIL import Image, ImageTk
 
 from editor import resource_path
+from editor.notification_popup import NotificationPopup
 from editor.shared_data import ImageData, StyleData, MetadataData
 
 
@@ -103,6 +104,8 @@ class ImageWidget(tk.Frame):
             if new_path:
                 path = new_path
             piexif.insert(exif_bytes, path)
+
+            NotificationPopup(self.style_data, title="Succès", message=f"L'image a correctement été enregistré au chemin : {path}")
 
     def save_as(self, event=None):
         if self.image_data.image_open:
