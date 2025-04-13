@@ -68,7 +68,9 @@ class ExifEditorApp:
                                 self.reset_window,
                                 self.image_content.open_file_dialog,
                                 self.image_content.close_image,
-                                self.metadata_content.reset_all)
+                                self.metadata_content.reset_all,
+                                self.image_content.save,
+                                self.image_content.save_as)
 
         self.resize_after_id = None
         root.bind("<Configure>", self.on_resize)

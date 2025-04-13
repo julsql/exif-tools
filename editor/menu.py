@@ -2,7 +2,7 @@ import tkinter as tk
 
 
 class MenuBar:
-    def __init__(self, root, reset_callback, open_image_callback, close_image_callback, reset_values):
+    def __init__(self, root, reset_callback, open_image_callback, close_image_callback, reset_values, save, save_as):
         self.root = root
 
         # Barre de menus
@@ -16,6 +16,8 @@ class MenuBar:
 
         # Menu Fichier
         file_menu = tk.Menu(menu_bar, tearoff=0)
+        file_menu.add_command(label="Enregistrer", command=save)
+        file_menu.add_command(label="Enregistrer sous", command=save_as)
         file_menu.add_command(label="Ouvrir une image", command=open_image_callback)
         file_menu.add_command(label="Fermer l'image", command=close_image_callback)
         menu_bar.add_cascade(label="Fichier", menu=file_menu)
