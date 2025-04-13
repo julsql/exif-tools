@@ -105,27 +105,24 @@ class ImageWidget(tk.Frame):
             piexif.insert(exif_bytes, path)
 
     def save_as(self, event=None):
-        if self.image_data.pil_image is None or self.image_data.image_path is None:
-            return
+        if self.image_data.image_open:
+            path = self.image_data.image_path
+            (filename, ext) = os.path.splitext(os.path.basename(path))
 
-        path = self.image_data.image_path
-        (filename, ext) = os.path.splitext(os.path.basename(path))
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=ext,
+                filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
+                initialfile=f'{filename}-copy{ext}',
+                title="Enregistrer l'image sous..."
+            )
 
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=ext,
-            filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
-            initialfile=f'{filename}-copy{ext}',
-            title="Enregistrer l'image sous..."
-        )
-
-        if file_path:
-            shutil.copy2(self.image_data.image_path, file_path)
-            self.save_data(file_path)
+            if file_path:
+                shutil.copy2(self.image_data.image_path, file_path)
+                self.save_data(file_path)
 
     def save(self, event=None):
-        if self.image_data.pil_image is None:
-            return
-        self.save_data()
+        if self.image_data.image_open:
+            self.save_data()
 
     def _parse_date(self, date_str):
         try:
@@ -180,6 +177,7 @@ class ImageWidget(tk.Frame):
         self.image_data.image_path = None
         self.image_data.pil_image = None
         self.image_data.tk_image = None
+        self.image_data.image_open = False
         self.event_bus.publish("metadata_updated", "close")
 
     def open_file_dialog(self, event=None):
@@ -209,6 +207,7 @@ class ImageWidget(tk.Frame):
         try:
             image = Image.open(self.image_data.image_path)
             self.image_data.pil_image = image
+            self.image_data.image_open = True
             self.reset_image()
             self.event_bus.publish("metadata_updated", "open")
 

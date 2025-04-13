@@ -2,6 +2,7 @@ import tkinter as tk
 
 import tkintermapview
 
+from editor.metadata_widget import get_coordinates
 from editor.shared_data import MetadataData, StyleData, ImageData
 
 
@@ -30,9 +31,16 @@ class MapWidget(tk.Frame):
 
         self.event_bus.subscribe("metadata_updated", self.update_origin)
 
-    def delete_markers(self):
+    def delete_markers_center(self):
         """Supprimer tous les marqueurs et recentrer la carte."""
         self.map.set_position(*self.COORDINATES_PARIS)
+        if self.origin_marker:
+            self.origin_marker.delete()
+        if self.new_marker:
+            self.new_marker.delete()
+
+    def delete_markers(self):
+        """Supprimer tous les marqueurs et recentrer la carte."""
         if self.origin_marker:
             self.origin_marker.delete()
         if self.new_marker:
@@ -42,12 +50,12 @@ class MapWidget(tk.Frame):
         """Met à jour les marqueurs selon l'événement reçu."""
         if publisher == "open":
             coordinates = self.get_coordinates()
-            self.add_marker_event(coordinates, True)
+            self.add_origin_marker_event(coordinates)
         elif publisher == "close":
-            self.delete_markers()
+            self.delete_markers_center()
         elif publisher == "edit":
             coordinates = self.get_coordinates()
-            self.add_marker_event(coordinates)
+            self.add_marker_event(coordinates, coordinates == get_coordinates(self.image_data.pil_image))
 
     def get_coordinates(self):
         """Récupère les coordonnées à partir des champs de métadonnées."""
@@ -58,6 +66,15 @@ class MapWidget(tk.Frame):
             return None
         return latitude, longitude
 
+    def add_origin_marker_event(self, coords):
+        """Ajoute un marqueur à l'emplacement donné sur la carte."""
+        self.event_bus.publish("metadata_updated", "add_marker")
+
+        if coords:
+            self.delete_markers()
+            self.map.set_position(*coords)
+            self.origin_marker = self.map.set_marker(coords[0], coords[1], text="Origine")
+
     def add_marker_event(self, coords, origin=False):
         """Ajoute un marqueur à l'emplacement donné sur la carte."""
         self.event_bus.publish("metadata_updated", "add_marker")
@@ -65,8 +82,7 @@ class MapWidget(tk.Frame):
         if coords:
             if origin:
                 self.delete_markers()
-                self.map.set_position(*coords)
-                self.origin_marker = self.map.set_marker(coords[0], coords[1], text="Origine")
+                self.origin_marker = self.map.set_marker(*coords, text="Origine")
             else:
                 if self.new_marker:
                     self.new_marker.delete()
@@ -77,6 +93,6 @@ class MapWidget(tk.Frame):
                     self.metadata_data.entries["longitude"].delete(0, tk.END)
                     self.metadata_data.entries["longitude"].insert(0, coords[1])
 
-                    self.new_marker = self.map.set_marker(coords[0], coords[1], text="Nouvelle",
+                    self.new_marker = self.map.set_marker(*coords, text="Nouvelle",
                                                           marker_color_circle=self.style_data.MARKER_CIRCLE_COLOR,
                                                           marker_color_outside=self.style_data.MARKER_OUTSIDE_COLOR)

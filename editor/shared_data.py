@@ -3,6 +3,7 @@ class ImageData:
         self.image_path = None
         self.pil_image = None
         self.tk_image = None
+        self.image_open = False
 
 
 class MetadataData:
