@@ -72,7 +72,7 @@ class MetadataWidget(tk.Frame):
                 entry.bind(focus_out_event, self.on_validate_coordinates_change)
 
             if label_data["key"] in ["date_creation"]:
-                entry.bind("<Return>", self.on_validate_date_change)
+                entry.bind(enter_event, self.on_validate_date_change)
                 entry.bind(focus_out_event, self.on_validate_date_change_focus_out)
 
             entry.bind(focus_in_event, self.on_focus_in)
@@ -150,28 +150,30 @@ class MetadataWidget(tk.Frame):
 
     def reset(self, key, index):
         """Reset la valeur d'un input."""
-        entry = self.metadata_data.entries[key]
-        entry.delete(0, tk.END)
-
-        data = self.get_data()
-        if data:
-            value = data[index]["value"]
-            entry.insert(0, value)
-        self.event_bus.publish("metadata_updated", "open")
-
-    def reset_all(self, event=None):
-        """Reset la valeur des metadata."""
-        for index, entry in enumerate(self.metadata_data.entries.values()):
-            entry.config(state="normal")
+        if self.image_data.image_open:
+            entry = self.metadata_data.entries[key]
             entry.delete(0, tk.END)
 
             data = self.get_data()
             if data:
                 value = data[index]["value"]
                 entry.insert(0, value)
-            if self.LABELS[index]["disable"]:
-                entry.config(state="disabled")
-        self.event_bus.publish("metadata_updated", "open")
+            self.event_bus.publish("metadata_updated", "edit")
+
+    def reset_all(self, event=None):
+        """Reset la valeur des metadata."""
+        if self.image_data.image_open:
+            for index, entry in enumerate(self.metadata_data.entries.values()):
+                entry.config(state="normal")
+                entry.delete(0, tk.END)
+
+                data = self.get_data()
+                if data:
+                    value = data[index]["value"]
+                    entry.insert(0, value)
+                if self.LABELS[index]["disable"]:
+                    entry.config(state="disabled")
+            self.event_bus.publish("metadata_updated", "edit")
 
     def hook_imagewidget(self):
         # Récupère le widget parent et s'abonne à son événement
