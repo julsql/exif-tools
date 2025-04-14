@@ -8,7 +8,7 @@ import piexif
 from PIL import Image, ImageTk
 
 from editor import resource_path
-from editor.notification_popup import NotificationPopup
+from editor.notification_popup import ToastNotification
 from editor.shared_data import ImageData, StyleData, MetadataData
 
 
@@ -22,7 +22,7 @@ def load_icon(file_path, height):
 
 
 class ImageWidget(tk.Frame):
-    def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
+    def __init__(self, parent, root, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         assets_path = resource_path("assets/")
         icon_padding = 4
         icon_height = 20
@@ -34,6 +34,7 @@ class ImageWidget(tk.Frame):
         self.style_data = style_data
 
         self.parent = parent
+        self.root = root
         self.configure(bg=style_data.BG_COLOR)
 
         self.top_frame = tk.Frame(self, height=20, bg=style_data.BG_TAB_COLOR)
@@ -105,7 +106,7 @@ class ImageWidget(tk.Frame):
                 path = new_path
             piexif.insert(exif_bytes, path)
 
-            NotificationPopup(self.style_data, title="Succès", message=f"L'image a correctement été enregistré au chemin : {path}")
+            ToastNotification(self.root, self.style_data, "Image enregistrée")
 
     def save_as(self, event=None):
         if self.image_data.image_open:

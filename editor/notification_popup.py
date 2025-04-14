@@ -1,57 +1,65 @@
 import tkinter as tk
-from tkinter import ttk
 
 from editor.shared_data import StyleData
 
 
-class NotificationPopup(tk.Toplevel):
-    def __init__(self, style_data: StyleData, title="Notification", message="Ceci est un message.",
-                 width=300, height=150):
-        super().__init__(None)
-
-        self.title(title)
-        self.resizable(False, False)
-        self.geometry(f"{width}x{height}")
+class ToastNotification(tk.Toplevel):
+    def __init__(self, parent, style_data: StyleData, message: str, duration: int = 2000):
+        super().__init__(parent)
+        self.overrideredirect(True)
+        try:
+            self.wm_attributes("-transparent", True)
+        except tk.TclError:
+            pass
         self.attributes("-topmost", True)
-        self.configure(bg=style_data.BG_COLOR)
+        self.configure(bg=style_data.BG_COLOR, bd=0)
 
-        # Pour certains OS (Windows) : effet semi-transparent pour "modern look"
-        self.wm_attributes("-alpha", 0.97)
+        font = style_data.FONT
 
-        # Centre la fenêtre
-        self._center_window(width, height)
+        self.frame = tk.Frame(
+            self,
+            bg=style_data.BG_COLOR,
+            bd=0,
+        )
+        self.frame.pack(fill="both", expand=True)
+        self.frame.config(highlightbackground=style_data.BORDER_COLOR, highlightthickness=1)
 
-        # Style ttk
-        style = ttk.Style(self)
-        style.theme_use("default")
+        # Label centré
+        self.label = tk.Label(
+            self.frame,
+            text=message,
+            font=font,
+            bg=style_data.BG_COLOR,
+            fg=style_data.FONT_COLOR,
+            anchor="center",
+            justify="center"
+        )
+        self.label.pack(ipadx=10, pady=5)
 
-        # Label stylé
-        style.configure("Notification.TLabel",
-                        background=style_data.BG_COLOR,
-                        foreground=style_data.FONT_COLOR,
-                        font=style_data.FONT)
-
-        label = ttk.Label(self, text=message, style="Notification.TLabel",
-                          wraplength=width - 20, anchor="center", justify="center")
-        label.pack(pady=20, padx=10)
-
-        # Bouton stylé
-        style.configure("Notification.TButton",
-                        background=style_data.BUTTON_COLOR,
-                        foreground=style_data.FONT_COLOR,
-                        borderwidth=0,
-                        focusthickness=0,
-                        padding=6)
-        style.map("Notification.TButton",
-                  background=[('active', style_data.BUTTON_HOVER_COLOR)])
-
-        close_btn = ttk.Button(self, text="Fermer", command=self.destroy, style="Notification.TButton")
-        close_btn.pack(pady=5)
-
-        self.grab_set()
-
-    def _center_window(self, width, height):
         self.update_idletasks()
-        x = (self.winfo_screenwidth() - width) // 2
-        y = (self.winfo_screenheight() - height) // 2
+
+        width = self.winfo_reqwidth()
+        height = self.winfo_reqheight()
+
+        # Calcul de la position
+        x = parent.winfo_rootx() + (parent.winfo_width() - width) // 2
+        y = parent.winfo_rooty() + 20
         self.geometry(f"{width}x{height}+{x}+{y}")
+
+        self.attributes("-alpha", 0.0)
+        self.fade_in()
+        self.after(duration, self.fade_out)
+
+    def fade_in(self):
+        alpha = self.attributes("-alpha")
+        if alpha < 1.0:
+            self.attributes("-alpha", alpha + 0.1)
+            self.after(30, self.fade_in)
+
+    def fade_out(self):
+        alpha = self.attributes("-alpha")
+        if alpha > 0:
+            self.attributes("-alpha", alpha - 0.1)
+            self.after(30, self.fade_out)
+        else:
+            self.destroy()
