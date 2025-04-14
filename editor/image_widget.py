@@ -6,6 +6,7 @@ from tkinter import filedialog
 
 import piexif
 from PIL import Image, ImageTk
+from tkinterdnd2 import DND_FILES
 
 from editor import resource_path
 from editor.notification_popup import ToastNotification
@@ -23,8 +24,10 @@ def load_icon(file_path, height):
 
 class ImageWidget(tk.Frame):
     EXTENSIONS = "*.jpg *.JPG *.jpeg *.JPEG *.png *.PNG *.gif *.GIF"
+    EXTENSIONS_LIST = [".jpg", ".jpeg", ".png", ".gif"]
 
-    def __init__(self, parent, root, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
+    def __init__(self, parent, root, event_bus, image_data: ImageData, metadata_data: MetadataData,
+                 style_data: StyleData):
         assets_path = resource_path("assets/")
         icon_padding = 4
         icon_height = 20
@@ -66,6 +69,23 @@ class ImageWidget(tk.Frame):
         # Zone d'affichage de l'image
         self.image_area = tk.Label(self, bg=style_data.BG_COLOR)
         self.image_area.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+
+        self.image_area_place_config = {
+            "relx": 0,
+            "rely": 0,
+            "relwidth": 1,
+            "relheight": 1
+        }
+
+        self.image_display_place_config = {
+            "relx": 0.5,
+            "rely": 0.5,
+            "anchor": "center",
+        }
+
+        self.image_display = tk.Label(self.image_area, bg=self.style_data.BG_COLOR)
+
+        self.hide_image()
 
         self.top_frame.grid_columnconfigure(0, weight=0)
         self.top_frame.grid_columnconfigure(1, weight=0)
@@ -214,14 +234,27 @@ class ImageWidget(tk.Frame):
     def close_image(self, event=None):
         """Ferme l'image."""
         self.loaded_image = None
-        self.image_area.image = None
-        self.image_area.config(image='')
+        if self.image_display:
+            self.image_display.config(image='')
+            self.image_display.image = None
 
         self.image_data.image_path = None
         self.image_data.pil_image = None
         self.image_data.tk_image = None
         self.image_data.image_open = False
+
+        self.hide_image()
         self.event_bus.publish("metadata_updated", "close")
+
+    def drag_and_drop(self, event):
+        file_path = event.data.strip('{}')
+        if os.path.isfile(file_path):
+            ext = os.path.splitext(file_path)[1].lower()
+            if ext in self.EXTENSIONS_LIST:
+                self.image_data.image_path = file_path
+                self.load_image()
+            else:
+                print("Format de fichier non pris en charge.")
 
     def open_file_dialog(self, event=None):
         file_path = filedialog.askopenfilename(filetypes=[("Images", self.EXTENSIONS)])
@@ -229,20 +262,27 @@ class ImageWidget(tk.Frame):
             self.image_data.image_path = file_path
             self.load_image()
 
-    def reset_image(self, event=None):
-        if self.image_data.pil_image:
-            image = self.image_data.pil_image
-            tk_image = image
-            if image.format not in ['PNG', 'GIF', 'PPM', 'PGM']:
-                tk_image = image.convert("RGB")
+    def open_file_dialog_on_click(self, event=None):
+        if not self.image_data.image_open:
+            file_path = filedialog.askopenfilename(filetypes=[("Images", self.EXTENSIONS)])
+            if file_path:
+                self.image_data.image_path = file_path
+                self.load_image()
 
-            tk_image.thumbnail((self.winfo_width(), self.winfo_height()), Image.Resampling.LANCZOS)
+    def reset_image(self, event=None):
+        if self.image_data.image_open:
+            image = self.image_data.pil_image
+            tk_image = image.convert("RGB")
+            tk_image.thumbnail((self.image_area.winfo_width(), self.image_area.winfo_height()),
+                               Image.Resampling.LANCZOS)
 
             # Convertir l'image pour tkinter
             loaded_image = ImageTk.PhotoImage(tk_image)
 
-            self.image_area.config(image=loaded_image)
-            self.image_area.image = loaded_image
+            self.build_image()
+
+            self.image_display.config(image=loaded_image)
+            self.image_display.image = loaded_image
             self.image_data.tk_image = loaded_image
 
     def load_image(self):
@@ -255,3 +295,29 @@ class ImageWidget(tk.Frame):
             self.event_bus.publish("metadata_updated", "open")
         except Exception as e:
             print(f"Erreur lors du chargement de l'image : {e}")
+
+    def hide_image(self):
+        self.image_display.place_forget()
+        self.image_area_frame = tk.Frame(self.image_area, bg=self.style_data.BG_COLOR, bd=2, relief="groove",
+                                         cursor="hand2")
+
+        self.image_area_frame.drop_target_register(DND_FILES)
+        self.image_area_frame.dnd_bind('<<Drop>>', self.drag_and_drop)
+        self.image_area_frame.bind("<Button-1>", self.open_file_dialog_on_click)
+        self.image_area_frame.place(**self.image_area_place_config)
+        self.image_area_frame.config(padx=10, pady=10)
+
+        self.drop_hint = tk.Label(
+            self.image_area_frame,
+            text="📂 Glissez une image ici\nou cliquez pour ouvrir",
+            bg=self.style_data.BG_COLOR,
+            fg=self.style_data.FONT_COLOR,
+            font=self.style_data.FONT,
+            justify="center",
+        )
+        self.drop_hint.place(relx=0.5, rely=0.5, anchor="center")
+
+    def build_image(self):
+        self.image_display.place(**self.image_display_place_config)
+        self.image_area_frame.destroy()
+        self.drop_hint.destroy()
