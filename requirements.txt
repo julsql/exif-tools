@@ -14,5 +14,6 @@ pyperclip==1.9.0
 ratelim==0.1.6
 requests==2.32.3
 six==1.17.0
+tkinterdnd2==0.4.3
 tkintermapview==1.29
 urllib3==2.3.0
