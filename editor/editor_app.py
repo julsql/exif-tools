@@ -49,7 +49,7 @@ class ExifEditorApp:
         self.left_pane = tk.PanedWindow(self.main_pane, orient=tk.VERTICAL, bg=self.style_data.BORDER_COLOR)
         self.main_pane.add(self.left_pane)
 
-        self.image_content = ImageWidget(self.left_pane, self.event_bus, self.image_data, self.metadata_data,
+        self.image_content = ImageWidget(self.left_pane, self.root, self.event_bus, self.image_data, self.metadata_data,
                                          self.style_data)
         self.left_pane.add(self.image_content)
 
