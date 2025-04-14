@@ -1,7 +1,6 @@
 import os
 import tkinter as tk
 from datetime import datetime
-from tkinter import ttk
 
 import piexif
 
@@ -34,18 +33,6 @@ class MetadataWidget(tk.Frame):
         self.style_data = style_data
 
         self.configure(bg=style_data.BG_COLOR)
-
-        style = ttk.Style(self)
-        style.theme_use("default")
-        style.configure("Reset.TButton",
-                        background=style_data.BUTTON_COLOR,
-                        foreground=style_data.FONT_COLOR,
-                        borderwidth=0,
-                        focusthickness=0,
-                        padding=2)
-
-        style.map("Reset.TButton",
-                  background=[('active', style_data.BUTTON_HOVER_COLOR)])
 
         assets_path = resource_path("assets/")
         self.reset_icon = load_icon(os.path.join(assets_path, style_data.MODE, "reset.png"), 20)
@@ -86,12 +73,9 @@ class MetadataWidget(tk.Frame):
                              disabledforeground=style_data.FG_DISABLE,
                              disabledbackground=style_data.BG_DISABLE)
             else:
-                btn_reset = ttk.Button(self,
-                                       text="✖",
-                                       width=3,
-                                       command=
-                                       lambda local_key=label_data["key"], index=i: self.reset(local_key, index),
-                                       style="Reset.TButton")
+                btn_reset = tk.Label(self, image=self.reset_icon, bg=style_data.BG_COLOR, padx=0)
+                btn_reset.bind(button_event,
+                               lambda event, local_key=label_data["key"], index=i: self.reset(event, local_key, index))
                 btn_reset.grid(row=i + 1, column=2, padx=5, pady=5)
 
             self.metadata_data.entries[label_data["key"]] = entry
@@ -124,7 +108,7 @@ class MetadataWidget(tk.Frame):
     def on_validate_date_change(self, event=None):
         if self.date_valid():
             self.errorLabel.configure(text="")
-        else :
+        else:
             self.errorLabel.configure(text=self.WARNING_MESSAGE + "Date invalide")
 
     def on_validate_date_change_focus_out(self, event=None):
@@ -148,7 +132,7 @@ class MetadataWidget(tk.Frame):
         except (ValueError, TypeError):
             return False
 
-    def reset(self, key, index):
+    def reset(self, event, key, index):
         """Reset la valeur d'un input."""
         if self.image_data.image_open:
             entry = self.metadata_data.entries[key]
@@ -157,7 +141,8 @@ class MetadataWidget(tk.Frame):
             data = self.get_data()
             if data:
                 value = data[index]["value"]
-                entry.insert(0, value)
+                if value:
+                    entry.insert(0, value)
             self.event_bus.publish("metadata_updated", "edit")
 
     def reset_all(self, event=None):
@@ -234,16 +219,20 @@ class MetadataWidget(tk.Frame):
 
 
 def get_date_taken(image, exif_date_format, displayed_date_format):
-    exif_data = piexif.load(image.info['exif'])
-    date_prise_vue = exif_data.get("0th", {}).get(piexif.ImageIFD.DateTime)
-
-    if date_prise_vue:
-        date_prise_vue = date_prise_vue.decode('utf-8')
-        date_obj = datetime.strptime(date_prise_vue, exif_date_format)
-        date_prise_vue_formattee = date_obj.strftime(displayed_date_format)
-        return date_prise_vue_formattee
-    else:
+    try:
+        exif_data = piexif.load(image.info['exif'])
+    except Exception:
         return None
+    else:
+        date_prise_vue = exif_data.get("0th", {}).get(piexif.ImageIFD.DateTime)
+
+        if date_prise_vue:
+            date_prise_vue = date_prise_vue.decode('utf-8')
+            date_obj = datetime.strptime(date_prise_vue, exif_date_format)
+            date_prise_vue_formattee = date_obj.strftime(displayed_date_format)
+            return date_prise_vue_formattee
+        else:
+            return None
 
 
 def get_date_modify(path):
@@ -300,10 +289,13 @@ def get_geotagging(exif_data):
 
 def get_coordinates(image):
     """Retourne les coordonnées GPS d'une image si disponibles"""
-    exif_data = piexif.load(image.info['exif'])
-
-    latitude, longitude = get_geotagging(exif_data)
-    if latitude is not None and longitude is not None:
-        return latitude, longitude
-    else:
+    try:
+        exif_data = piexif.load(image.info['exif'])
+    except Exception:
         return None, None
+    else:
+        latitude, longitude = get_geotagging(exif_data)
+        if latitude is not None and longitude is not None:
+            return latitude, longitude
+        else:
+            return None, None
