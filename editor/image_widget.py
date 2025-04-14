@@ -102,13 +102,12 @@ class ImageWidget(tk.Frame):
         longitude = self._parse_coordinate(longitude_str)
 
         # Mettre à jour les métadonnées EXIF
-        if date or latitude or longitude:
-            exif_bytes = self._update_exif_metadata(image, date, latitude, longitude)
-            if new_path:
-                path = new_path
-            piexif.insert(exif_bytes, path)
+        exif_bytes = self._update_exif_metadata(image, date, latitude, longitude)
+        if new_path:
+            path = new_path
+        piexif.insert(exif_bytes, path)
 
-            ToastNotification(self.root, self.style_data, "Image enregistrée")
+        ToastNotification(self.root, self.style_data, "Image sauvegardée avec succès")
 
     def save_as(self, event=None):
         if self.image_data.image_open:
@@ -131,6 +130,8 @@ class ImageWidget(tk.Frame):
             self.save_data()
 
     def _parse_date(self, date_str):
+        if date_str == "":
+            return ""
         try:
             return datetime.strptime(
                 date_str, self.style_data.DISPLAYED_DATE_FORMAT
@@ -140,6 +141,8 @@ class ImageWidget(tk.Frame):
             return None
 
     def _parse_coordinate(self, coord_str):
+        if coord_str == "":
+            return ""
         try:
             return float(coord_str)
         except ValueError:
@@ -153,26 +156,60 @@ class ImageWidget(tk.Frame):
         return [(d, 1), (m, 1), (s, 10000)]
 
     def _update_exif_metadata(self, image, date, latitude, longitude):
-        exif_dict = piexif.load(image.info.get("exif", b""))
-        print("save")
+        exif_data = image.info.get("exif")
+        if exif_data:
+            exif_dict = piexif.load(exif_data)
+        else:
+            exif_dict = {"0th": {}, "Exif": {}, "GPS": {}}  # Dictionnaire EXIF vide
 
         # Dates
-        if date:
-            encoded_date = date.encode()
-            exif_dict['0th'][piexif.ImageIFD.DateTime] = encoded_date
-            exif_dict['Exif'][piexif.ExifIFD.DateTimeOriginal] = encoded_date
-            exif_dict['Exif'][piexif.ExifIFD.DateTimeDigitized] = encoded_date
+        if date is not None:
+            self._update_exif_date(date, exif_dict)
 
         # GPS
-        if latitude:
-            exif_dict['GPS'][piexif.GPSIFD.GPSLatitudeRef] = b'N' if latitude >= 0 else b'S'
-            exif_dict['GPS'][piexif.GPSIFD.GPSLatitude] = self._decimal_to_dms_rational(abs(latitude))
-
-        if longitude:
-            exif_dict['GPS'][piexif.GPSIFD.GPSLongitudeRef] = b'E' if longitude >= 0 else b'W'
-            exif_dict['GPS'][piexif.GPSIFD.GPSLongitude] = self._decimal_to_dms_rational(abs(longitude))
+        if latitude is not None:
+            self._update_exif_latitude(exif_dict, latitude)
+        if longitude is not None:
+            self._update_exif_longitude(exif_dict, longitude)
 
         return piexif.dump(exif_dict)
+
+    def _update_exif_longitude(self, exif_dict, longitude):
+        if longitude == "":
+            if piexif.GPSIFD.GPSLongitudeRef in exif_dict['GPS']:
+                del exif_dict['GPS'][piexif.GPSIFD.GPSLongitudeRef]
+            if piexif.GPSIFD.GPSLongitude in exif_dict['GPS']:
+                del exif_dict['GPS'][piexif.GPSIFD.GPSLongitude]
+            return
+
+        exif_dict['GPS'][piexif.GPSIFD.GPSLongitudeRef] = b'E' if longitude >= 0 else b'W'
+        exif_dict['GPS'][piexif.GPSIFD.GPSLongitude] = self._decimal_to_dms_rational(abs(longitude))
+
+    def _update_exif_latitude(self, exif_dict, latitude):
+        if latitude == "":
+            if piexif.GPSIFD.GPSLatitudeRef in exif_dict['GPS']:
+                del exif_dict['GPS'][piexif.GPSIFD.GPSLatitudeRef]
+            if piexif.GPSIFD.GPSLatitude in exif_dict['GPS']:
+                del exif_dict['GPS'][piexif.GPSIFD.GPSLatitude]
+            return
+
+        exif_dict['GPS'][piexif.GPSIFD.GPSLatitudeRef] = b'N' if latitude >= 0 else b'S'
+        exif_dict['GPS'][piexif.GPSIFD.GPSLatitude] = self._decimal_to_dms_rational(abs(latitude))
+
+    def _update_exif_date(self, date, exif_dict):
+        if date == "":
+            if piexif.ImageIFD.DateTime in exif_dict['0th']:
+                del exif_dict['0th'][piexif.ImageIFD.DateTime]
+            if piexif.ExifIFD.DateTimeOriginal in exif_dict['Exif']:
+                del exif_dict['Exif'][piexif.ExifIFD.DateTimeOriginal]
+            if piexif.ExifIFD.DateTimeDigitized in exif_dict['Exif']:
+                del exif_dict['Exif'][piexif.ExifIFD.DateTimeDigitized]
+            return
+
+        encoded_date = date.encode()
+        exif_dict['0th'][piexif.ImageIFD.DateTime] = encoded_date
+        exif_dict['Exif'][piexif.ExifIFD.DateTimeOriginal] = encoded_date
+        exif_dict['Exif'][piexif.ExifIFD.DateTimeDigitized] = encoded_date
 
     def close_image(self, event=None):
         """Ferme l'image."""
@@ -216,6 +253,5 @@ class ImageWidget(tk.Frame):
             self.image_data.image_open = True
             self.reset_image()
             self.event_bus.publish("metadata_updated", "open")
-
         except Exception as e:
             print(f"Erreur lors du chargement de l'image : {e}")
