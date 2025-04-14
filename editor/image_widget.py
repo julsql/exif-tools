@@ -22,6 +22,8 @@ def load_icon(file_path, height):
 
 
 class ImageWidget(tk.Frame):
+    EXTENSIONS = "*.jpg *.JPG *.jpeg *.JPEG *.png *.PNG *.gif *.GIF"
+
     def __init__(self, parent, root, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         assets_path = resource_path("assets/")
         icon_padding = 4
@@ -115,7 +117,7 @@ class ImageWidget(tk.Frame):
 
             file_path = filedialog.asksaveasfilename(
                 defaultextension=ext,
-                filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
+                filetypes=[("Images", self.EXTENSIONS), ("Tout types", "*.*")],
                 initialfile=f'{filename}-copy{ext}',
                 title="Enregistrer l'image sous..."
             )
@@ -185,7 +187,7 @@ class ImageWidget(tk.Frame):
         self.event_bus.publish("metadata_updated", "close")
 
     def open_file_dialog(self, event=None):
-        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.gif")])
+        file_path = filedialog.askopenfilename(filetypes=[("Images", self.EXTENSIONS)])
         if file_path:
             self.image_data.image_path = file_path
             self.load_image()
