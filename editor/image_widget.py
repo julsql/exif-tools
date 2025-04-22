@@ -6,7 +6,6 @@ from tkinter import filedialog
 
 import piexif
 from PIL import Image, ImageTk
-from tkinterdnd2 import DND_FILES
 
 from editor import resource_path
 from editor.notification_popup import ToastNotification
@@ -311,9 +310,6 @@ class ImageWidget(tk.Frame):
         self.image_display.place_forget()
         self.image_area_frame = tk.Frame(self.image_area, bg=self.style_data.BG_COLOR, bd=2, relief="groove",
                                          cursor="hand2")
-
-        self.image_area_frame.drop_target_register(DND_FILES)
-        self.image_area_frame.dnd_bind('<<Drop>>', self.drag_and_drop)
         self.image_area_frame.bind("<Button-1>", self.open_file_dialog_on_click)
         self.image_area_frame.place(**self.image_area_place_config)
         self.image_area_frame.config(padx=10, pady=10)

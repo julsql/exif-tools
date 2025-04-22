@@ -2,6 +2,8 @@ import os
 import tkinter as tk
 from tkinter import PhotoImage
 
+from tkinterdnd2 import DND_FILES
+
 from editor import resource_path
 from editor.config_manager import ConfigManager
 from editor.event_bus import EventBus
@@ -74,6 +76,9 @@ class ExifEditorApp:
 
         self.resize_after_id = None
         root.bind("<Configure>", self.on_resize)
+
+        self.root.drop_target_register(DND_FILES)
+        self.root.dnd_bind('<<Drop>>', self.image_content.drag_and_drop)
 
         self.event_bus.subscribe("metadata_updated", self.update)
 
