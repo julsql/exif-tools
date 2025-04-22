@@ -1,4 +1,5 @@
 import os
+import re
 import tkinter as tk
 from datetime import datetime
 
@@ -15,10 +16,12 @@ class MetadataWidget(tk.Frame):
               {"key": "format", "title": "Format", "disable": True},
               {"key": "poids", "title": "Poids", "disable": True},
               {"key": "dimensions", "title": "Dimensions (lxH)", "disable": True},
+              {"key": "appareil", "title": "Appareil photo", "disable": True},
               {"key": "date_creation", "title": "Date de création", "disable": False},
               {"key": "date_modification", "title": "Date de modification", "disable": True},
               {"key": "latitude", "title": "Latitude", "disable": False},
-              {"key": "longitude", "title": "Longitude", "disable": False}]
+              {"key": "longitude", "title": "Longitude", "disable": False},
+              ]
 
     def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         button_event = "<Button-1>"
@@ -176,11 +179,13 @@ class MetadataWidget(tk.Frame):
                     {"key": "format", "value": get_format(image)},
                     {"key": "poids", "value": get_poids(path)},
                     {"key": "dimensions", "value": get_size(image)},
+                    {"key": "appareil", "value": get_device(image)},
                     {"key": "date_creation", "value": get_date_taken(image, self.style_data.EXIF_DATE_FORMAT,
                                                                      self.style_data.DISPLAYED_DATE_FORMAT)},
                     {"key": "date_modification", "value": get_date_modify(path)},
                     {"key": "latitude", "value": latitude},
-                    {"key": "longitude", "value": longitude}, ]
+                    {"key": "longitude", "value": longitude},
+                    ]
         return None
 
     def update_metadata(self, publisher):
@@ -249,6 +254,27 @@ def get_poids(path):
 
 def get_name(path):
     return ".".join(path.split("/")[-1].split(".")[:-1])
+
+
+def get_device(image):
+    """Retourne le nom de l'appareil photo qui a pris une image si disponibles"""
+    try:
+        exif_dict = piexif.load(image.info['exif'])
+    except Exception:
+        return None
+    else:
+        if "0th" in exif_dict:
+            make = exif_dict["0th"].get(piexif.ImageIFD.Make, b"").decode("utf-8", errors="ignore")
+            model = exif_dict["0th"].get(piexif.ImageIFD.Model, b"").decode("utf-8", errors="ignore")
+            make = re.sub(r'\s+', ' ', make).strip()
+            model = re.sub(r'\s+', ' ', model).strip()
+            if model.lower().startswith(make.lower()):
+                result = model
+            else:
+                result = f"{make} {model}"
+            return result
+        else:
+            return None
 
 
 def get_format(image):
