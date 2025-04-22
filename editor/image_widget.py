@@ -192,7 +192,18 @@ class ImageWidget(tk.Frame):
         if longitude is not None:
             self._update_exif_longitude(exif_dict, longitude)
 
+        self._clean_metadata(exif_dict)
         return piexif.dump(exif_dict)
+
+    def _clean_metadata(self, exif_dict):
+        if "1st" in exif_dict:
+            for tag in [piexif.ImageIFD.XResolution, piexif.ImageIFD.YResolution]:
+                if tag in exif_dict["1st"]:
+                    value = exif_dict["1st"][tag]
+                    if isinstance(value, int):
+                        exif_dict["1st"][tag] = (value, 1)
+                    elif isinstance(value, tuple) and len(value) == 1:
+                        exif_dict["1st"][tag] = (value[0], 1)
 
     def _update_exif_longitude(self, exif_dict, longitude):
         if longitude == "":
