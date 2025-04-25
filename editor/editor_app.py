@@ -107,7 +107,7 @@ class ExifEditorApp:
     def reset_left_split(self, event):
         self.left_pane.sash_place(0, 0, self.horizontal_default_ratio())
 
-    def reset_window(self):
+    def reset_window(self, event=None):
         self.root.geometry(self.DEFAULT_GEOMETRY)
 
         self.main_pane.sash_place(0, self.vertical_default_ratio(self.DEFAULT_WIDTH), 0)
