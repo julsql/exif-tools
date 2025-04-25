@@ -80,6 +80,8 @@ class ExifEditorApp:
         self.root.drop_target_register(DND_FILES)
         self.root.dnd_bind('<<Drop>>', self.image_content.drag_and_drop)
 
+        self.root.bind_all("<Button-1>", self.clear_focus, add="+")
+
         self.event_bus.subscribe("metadata_updated", self.update)
 
         root.after(100, self.restore_split)
@@ -132,6 +134,11 @@ class ExifEditorApp:
         self.config.set("geometry", self.root.geometry())
         self.config.save()
         self.root.destroy()
+
+    def clear_focus(self, event=None):
+        widget = event.widget
+        if not isinstance(widget, tk.Entry):
+            self.root.focus_set()
 
     def vertical_default_ratio(self, total_width=None):
         if total_width is None:
