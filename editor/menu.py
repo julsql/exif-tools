@@ -1,5 +1,6 @@
-import tkinter as tk
 import platform
+import tkinter as tk
+from tkinter import messagebox
 
 
 class MenuBar:
@@ -13,17 +14,25 @@ class MenuBar:
 
         # Menu Outils
         outils_menu = tk.Menu(menu_bar, tearoff=0)
-        outils_menu.add_command(label="Réinitialiser la fenêtre", command=reset_callback, accelerator=self._format_accel("R"))
-        outils_menu.add_command(label="Réinitialiser les valeurs", command=reset_values, accelerator=self._format_accel("Shift+R"))
+        outils_menu.add_command(label="Réinitialiser la fenêtre", command=reset_callback,
+                                accelerator=self._format_accel("R"))
+        outils_menu.add_command(label="Réinitialiser les valeurs", command=reset_values,
+                                accelerator=self._format_accel("Shift+R"))
         menu_bar.add_cascade(label="Fenêtre", menu=outils_menu)
 
         # Menu Fichier
         file_menu = tk.Menu(menu_bar, tearoff=0)
         file_menu.add_command(label="Enregistrer", command=save, accelerator=self._format_accel("S"))
         file_menu.add_command(label="Enregistrer sous", command=save_as, accelerator=self._format_accel("Shift+S"))
-        file_menu.add_command(label="Ouvrir une image", command=open_image_callback, accelerator=self._format_accel("O"))
+        file_menu.add_command(label="Ouvrir une image", command=open_image_callback,
+                              accelerator=self._format_accel("O"))
         file_menu.add_command(label="Fermer l'image", command=close_image_callback, accelerator=self._format_accel("W"))
         menu_bar.add_cascade(label="Fichier", menu=file_menu)
+
+        # Menu Aide
+        help_menu = tk.Menu(menu_bar, tearoff=0)
+        help_menu.add_command(label="À propos", command=self.show_about)
+        menu_bar.add_cascade(label="Aide", menu=help_menu)
 
         # Ajouter la barre de menu à la fenêtre principale
         root.config(menu=menu_bar)
@@ -38,3 +47,7 @@ class MenuBar:
     def _format_accel(self, keys):
         """Formate le raccourci selon l'OS"""
         return f"{self.OS_CTRL}+{keys}"
+
+    def show_about(self):
+        """Affiche une popup À propos"""
+        messagebox.showinfo("À propos", "Éditeur Exif\nVersion 1.0.1\n© 2025 Jul SQL")
