@@ -1,5 +1,7 @@
 # Exif tools
 
+Version : 1.0.1
+
 Application pour visualiser et modifier les exif d'un photo.
 
 - Ouvrir la photo et la visualiser
@@ -13,6 +15,12 @@ Pour lancer l'application, lancer dans un terminal :
 ```bash
 pip install -r requirements.txt
 python3 main.py
+```
+
+Pour incrémenter de version, modifier le fichier `version.txt`et lancer
+
+```shell
+python3 bump_version.py
 ```
 
 ## Build l'application pour la déployer
