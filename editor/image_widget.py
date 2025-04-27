@@ -127,6 +127,7 @@ class ImageWidget(tk.Frame):
         piexif.insert(exif_bytes, path)
 
         ToastNotification(self.root, self.style_data, "Image sauvegardée avec succès")
+        return True
 
     def save_as(self, event=None):
         if self.image_data.image_open:
@@ -145,8 +146,11 @@ class ImageWidget(tk.Frame):
                 self.save_data(file_path)
 
     def save(self, event=None):
+        is_saved = False
         if self.image_data.image_open:
-            self.save_data()
+            is_saved = self.save_data()
+        if is_saved:
+            self.load_image()
 
     def _parse_date(self, date_str):
         if date_str == "":
