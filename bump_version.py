@@ -34,6 +34,13 @@ def main():
         f'Version {version}'
     )
 
+    # Modifier la recherche de mise à jour
+    update_file(
+        'main.py',
+        r"VERSION = '[\d\.]+'",
+        f"VERSION = '{version}'"
+    )
+
     # Modifier les scripts
     update_file(
         'scripts/install-all.sh',
