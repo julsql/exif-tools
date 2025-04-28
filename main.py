@@ -5,7 +5,7 @@ from tkinterdnd2 import TkinterDnD
 
 from editor.editor_app import ExifEditorApp
 
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 GITHUB_REPO = "julsql/exif-tools"
 
 def check_update():

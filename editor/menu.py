@@ -50,4 +50,4 @@ class MenuBar:
 
     def show_about(self):
         """Affiche une popup À propos"""
-        messagebox.showinfo("À propos", "Éditeur Exif\nVersion 1.0.1\n© 2025 Jul SQL")
+        messagebox.showinfo("À propos", "Éditeur Exif\nVersion 1.0.2\n© 2025 Jul SQL")
