@@ -45,6 +45,7 @@ class MapWidget(tk.Frame):
             self.origin_marker.delete()
         if self.new_marker:
             self.new_marker.delete()
+        self.map.set_position(*self.COORDINATES_PARIS)
 
     def update_origin(self, publisher):
         """Met à jour les marqueurs selon l'événement reçu."""
@@ -69,9 +70,8 @@ class MapWidget(tk.Frame):
     def add_origin_marker_event(self, coords):
         """Ajoute un marqueur à l'emplacement donné sur la carte."""
         self.event_bus.publish("metadata_updated", "add_marker")
-
+        self.delete_markers()
         if coords:
-            self.delete_markers()
             self.map.set_position(*coords)
             self.origin_marker = self.map.set_marker(coords[0], coords[1], text="Origine")
 
