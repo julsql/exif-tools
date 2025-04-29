@@ -6,7 +6,7 @@ from tkinterdnd2 import TkinterDnD
 
 from editor.editor_app import ExifEditorApp
 
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 GITHUB_REPO = "julsql/exif-tools"
 
 
