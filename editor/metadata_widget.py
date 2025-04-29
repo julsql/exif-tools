@@ -2,6 +2,7 @@ import os
 import re
 import tkinter as tk
 from datetime import datetime
+from tkinter import ttk
 
 import piexif
 
@@ -25,9 +26,9 @@ class MetadataWidget(tk.Frame):
 
     def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         button_event = "<Button-1>"
-        focus_in_event = "<FocusIn>"
         focus_out_event = "<FocusOut>"
         enter_event = "<Return>"
+        entry_style = "Custom.TEntry"
 
         super().__init__(parent)
         self.event_bus = event_bus
@@ -43,19 +44,30 @@ class MetadataWidget(tk.Frame):
         self.reset_button.grid(row=0, column=0, sticky="w")
         self.reset_button.bind(button_event, self.reset_all)
 
+        style = ttk.Style(self)
+        style.theme_use('clam')
+        style.configure(entry_style,
+                        foreground=style_data.FONT_COLOR,
+                        fieldbackground=style_data.BG_COLOR,
+                        background=style_data.BG_COLOR,
+                        bordercolor=style_data.BG_COLOR,
+                        relief="flat",
+                        padding=3,
+                        font=style_data.FONT)
+
+        style.map(entry_style, bordercolor=[])
+
+        style.map(entry_style,
+                  foreground=[("readonly", self.style_data.FG_DISABLE)],
+                  fieldbackground=[("readonly", self.style_data.BG_DISABLE)],
+                  background=[("readonly", self.style_data.BG_COLOR)],
+                  )
+
         for i, label_data in enumerate(self.LABELS):
             label = tk.Label(self, text="{0} : ".format(label_data["title"]), bg=style_data.BG_COLOR,
                              fg=style_data.FONT_COLOR, font=style_data.FONT)
 
-            entry = tk.Entry(self,
-                             bg=style_data.BG_COLOR,
-                             fg=style_data.FONT_COLOR,
-                             highlightbackground=self.style_data.BORDER_COLOR,
-                             bd=1,
-                             highlightthickness=1,
-                             relief="flat",
-                             insertbackground=style_data.FONT_COLOR,
-                             font=style_data.FONT)
+            entry = ttk.Entry(self, style='Custom.TEntry')
 
             if label_data["key"] in ["latitude", "longitude"]:
                 entry.bind(enter_event, self.on_validate_coordinates_change)
@@ -65,16 +77,11 @@ class MetadataWidget(tk.Frame):
                 entry.bind(enter_event, self.on_validate_date_change)
                 entry.bind(focus_out_event, self.on_validate_date_change_focus_out)
 
-            entry.bind(focus_in_event, self.on_focus_in)
-            entry.bind(focus_out_event, self.on_focus_out)
-
             label.grid(row=i + 1, column=0, sticky="w", padx=5, pady=5)
             entry.grid(row=i + 1, column=1, sticky="ew", padx=5, pady=5)
 
             if label_data["disable"]:
-                entry.config(state="disabled",
-                             disabledforeground=style_data.FG_DISABLE,
-                             disabledbackground=style_data.BG_DISABLE)
+                entry.config(state="readonly")
             else:
                 btn_reset = tk.Label(self, image=self.reset_icon, bg=style_data.BG_COLOR, padx=0)
                 btn_reset.bind(button_event,
@@ -115,7 +122,6 @@ class MetadataWidget(tk.Frame):
             self.errorLabel.configure(text=self.WARNING_MESSAGE + "Date invalide")
 
     def on_validate_date_change_focus_out(self, event=None):
-        self.on_focus_out(event)
         self.on_validate_date_change(event)
 
     def coordinates_valid(self):
@@ -160,7 +166,7 @@ class MetadataWidget(tk.Frame):
                     value = data[index]["value"]
                     entry.insert(0, value)
                 if self.LABELS[index]["disable"]:
-                    entry.config(state="disabled")
+                    entry.config(state="readonly")
             self.event_bus.publish("metadata_updated", "edit")
 
     def hook_imagewidget(self):
@@ -212,7 +218,7 @@ class MetadataWidget(tk.Frame):
         entry.insert(0, value)
 
         if self.LABELS[index]["disable"]:
-            entry.config(state="disabled")
+            entry.config(state="readonly")
 
     def _clear_all_entries(self):
         for index, entry in enumerate(self.metadata_data.entries.values()):
@@ -220,7 +226,7 @@ class MetadataWidget(tk.Frame):
             entry.delete(0, tk.END)
 
             if self.LABELS[index]["disable"]:
-                entry.config(state="disabled")
+                entry.config(state="readonly")
 
 
 def get_date_taken(image, exif_date_format, displayed_date_format):
