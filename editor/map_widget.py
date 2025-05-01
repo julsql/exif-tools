@@ -19,6 +19,10 @@ class MapWidget(tk.Frame):
         self.parent = parent
 
         self.map = tkintermapview.TkinterMapView(self, width=800, height=600)
+
+        # self.map.set_tile_server("https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png")
+        self.map.set_tile_server("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png")
+
         self.map.pack(fill="both", expand=True)
 
         self.map.set_position(*self.COORDINATES_PARIS)
