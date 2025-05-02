@@ -12,7 +12,7 @@ class MetadataData:
 
 
 class StyleData:
-    MODE = "light"
+    MODE = "dark"
 
     EXIF_DATE_FORMAT = '%Y:%m:%d %H:%M:%S'
     DISPLAYED_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -41,7 +41,5 @@ class StyleData:
             self.BUTTON_COLOR = "#e0e0e0"
             self.BUTTON_HOVER_COLOR = "#d0d0d0"
 
-        self.MARKER_CIRCLE_COLOR = "#1565c0"
-        self.MARKER_OUTSIDE_COLOR = "#42a5f5"
         self.FONT = ("Segoe UI", 14)
         self.TITLE_FONT = ("Segoe UI", 18, "bold")

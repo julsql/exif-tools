@@ -2,6 +2,7 @@ import tkinter as tk
 
 import tkintermapview
 
+from editor import resource_path
 from editor.metadata_widget import get_coordinates
 from editor.shared_data import MetadataData, StyleData, ImageData
 
@@ -17,6 +18,9 @@ class MapWidget(tk.Frame):
         self.metadata_data = metadata_data
         self.style_data = style_data
         self.parent = parent
+
+        self.red_icon = tk.PhotoImage(file=resource_path("assets/marker-red.png"))
+        self.blue_icon = tk.PhotoImage(file=resource_path("assets/marker-blue.png"))
 
         self.map = tkintermapview.TkinterMapView(self, width=800, height=600)
 
@@ -38,18 +42,18 @@ class MapWidget(tk.Frame):
     def delete_markers_center(self):
         """Supprimer tous les marqueurs et recentrer la carte."""
         self.map.set_position(*self.COORDINATES_PARIS)
+        self.map.set_zoom(5)
         if self.origin_marker:
             self.origin_marker.delete()
         if self.new_marker:
             self.new_marker.delete()
 
     def delete_markers(self):
-        """Supprimer tous les marqueurs et recentrer la carte."""
+        """Supprimer tous les marqueurs."""
         if self.origin_marker:
             self.origin_marker.delete()
         if self.new_marker:
             self.new_marker.delete()
-        self.map.set_position(*self.COORDINATES_PARIS)
 
     def update_origin(self, publisher):
         """Met à jour les marqueurs selon l'événement reçu."""
@@ -75,9 +79,10 @@ class MapWidget(tk.Frame):
         """Ajoute un marqueur à l'emplacement donné sur la carte."""
         self.event_bus.publish("metadata_updated", "add_marker")
         self.delete_markers()
+
         if coords:
             self.map.set_position(*coords)
-            self.origin_marker = self.map.set_marker(coords[0], coords[1], text="Origine")
+            self.origin_marker = self.map.set_marker(coords[0], coords[1], text="Origine", icon=self.red_icon)
 
     def add_marker_event(self, coords, origin=False):
         """Ajoute un marqueur à l'emplacement donné sur la carte."""
@@ -97,6 +102,6 @@ class MapWidget(tk.Frame):
             self.metadata_data.entries["longitude"].delete(0, tk.END)
             self.metadata_data.entries["longitude"].insert(0, coords[1])
 
-            self.new_marker = self.map.set_marker(*coords, text="Nouvelle",
-                                                  marker_color_circle=self.style_data.MARKER_CIRCLE_COLOR,
-                                                  marker_color_outside=self.style_data.MARKER_OUTSIDE_COLOR)
+            self.new_marker = self.map.set_marker(*coords,
+                                                  text="Nouvelle",
+                                                  icon=self.blue_icon)
