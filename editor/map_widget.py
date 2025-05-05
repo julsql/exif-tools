@@ -8,7 +8,6 @@ from editor.shared_data import MetadataData, StyleData, ImageData
 
 
 class MapWidget(tk.Frame):
-    COORDINATES_PARIS = (48.8566, 2.3522)
 
     def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
         super().__init__(parent)
@@ -29,7 +28,6 @@ class MapWidget(tk.Frame):
 
         self.map.pack(fill="both", expand=True)
 
-        self.map.set_position(*self.COORDINATES_PARIS)
         self.map.set_zoom(5)
 
         self.origin_marker = None
@@ -38,15 +36,6 @@ class MapWidget(tk.Frame):
         self.map.add_left_click_map_command(self.add_marker_event)
 
         self.event_bus.subscribe("metadata_updated", self.update_origin)
-
-    def delete_markers_center(self):
-        """Supprimer tous les marqueurs et recentrer la carte."""
-        self.map.set_position(*self.COORDINATES_PARIS)
-        self.map.set_zoom(5)
-        if self.origin_marker:
-            self.origin_marker.delete()
-        if self.new_marker:
-            self.new_marker.delete()
 
     def delete_markers(self):
         """Supprimer tous les marqueurs."""
@@ -61,7 +50,7 @@ class MapWidget(tk.Frame):
             coordinates = self.get_coordinates()
             self.add_origin_marker_event(coordinates)
         elif publisher == "close":
-            self.delete_markers_center()
+            self.delete_markers()
         elif publisher == "edit":
             coordinates = self.get_coordinates()
             self.add_marker_event(coordinates, coordinates == get_coordinates(self.image_data.pil_image))
