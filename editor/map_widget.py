@@ -9,7 +9,7 @@ from editor.shared_data import MetadataData, StyleData, ImageData
 
 class MapWidget(tk.Frame):
 
-    def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
+    def __init__(self, parent, event_bus, image_data: ImageData, position: tuple[int, int], zoom: int, metadata_data: MetadataData, style_data: StyleData):
         super().__init__(parent)
 
         self.event_bus = event_bus
@@ -28,7 +28,7 @@ class MapWidget(tk.Frame):
 
         self.map.pack(fill="both", expand=True)
 
-        self.map.set_zoom(5)
+        self.reset_position(position, zoom)
 
         self.origin_marker = None
         self.new_marker = None
@@ -36,6 +36,11 @@ class MapWidget(tk.Frame):
         self.map.add_left_click_map_command(self.add_marker_event)
 
         self.event_bus.subscribe("metadata_updated", self.update_origin)
+
+    def reset_position(self, position, zoom):
+        """Reset la position et le zoom de la carte."""
+        self.map.set_position(*position)
+        self.map.set_zoom(zoom)
 
     def delete_markers(self):
         """Supprimer tous les marqueurs."""
