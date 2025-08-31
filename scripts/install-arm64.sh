@@ -8,7 +8,7 @@ echo "🚀 Lancement de l'installation de l'application (version arm64)..."
 # === Variables personnalisables ===
 APP_NAME="Éditeur Exif"
 APP_COMMENT="Outil de gestion des métadonnées EXIF"
-VERSION="1.0.4"
+VERSION="1.0.5"
 EXEC_DEST_PATH="$HOME/exiftools/ExifTools"
 EXEC_SRC_PATH="https://github.com/julsql/exif-tools/releases/download/$VERSION/ExifTools$VERSION-arm64"
 ICON_SRC_PATH="https://raw.githubusercontent.com/julsql/exif-tools/$VERSION/assets/icon.png"
