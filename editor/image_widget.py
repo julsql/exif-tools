@@ -153,15 +153,15 @@ class ImageWidget(tk.Frame):
             self.load_image()
 
     def _parse_date(self, date_str):
-        if date_str == "":
-            return ""
-        try:
-            return datetime.strptime(
-                date_str, self.style_data.DISPLAYED_DATE_FORMAT
-            ).strftime(self.style_data.EXIF_DATE_FORMAT)
-        except ValueError:
-            print("Format de date incorrect")
-            return None
+        for fmt in self.style_data.ACCEPTED_DATE_FORMATS:
+            try:
+                return datetime.strptime(date_str, fmt).strftime(self.style_data.EXIF_DATE_FORMAT)
+            except ValueError:
+                continue
+
+        print(f"Format de date incorrect pour '{date_str}'")
+        ToastNotification(self.root, self.style_data, "Format de date incorrect")
+        return None
 
     def _parse_coordinate(self, coord_str):
         if coord_str == "":

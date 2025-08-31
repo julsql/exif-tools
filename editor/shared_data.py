@@ -16,6 +16,23 @@ class StyleData:
 
     EXIF_DATE_FORMAT = '%Y:%m:%d %H:%M:%S'
     DISPLAYED_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+    ACCEPTED_DATE_FORMATS = [
+        '%Y-%m-%d %H:%M:%S',
+        '%Y-%m-%d %H-%M-%S',
+        '%Y-%m-%d %H:%M',
+        '%Y-%m-%d %H-%M',
+        '%Y-%m-%d',
+        '%Y:%m:%d %H:%M:%S',
+        '%Y:%m:%d %H-%M-%S',
+        '%Y:%m:%d %H:%M',
+        '%Y:%m:%d %H-%M',
+        '%Y:%m:%d',
+        '%d/%m/%Y %H-%M-%S',
+        '%d/%m/%Y %H:%M:%S',
+        '%d/%m/%Y %H:%M',
+        '%d/%m/%Y %H-%M',
+        '%d/%m/%Y',
+    ]
 
     def __init__(self):
         if self.MODE == "dark":

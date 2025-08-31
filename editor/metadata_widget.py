@@ -1,7 +1,7 @@
 import os
 import re
 import tkinter as tk
-from datetime import datetime
+from datetime import datetime, datetime_CAPI
 from tkinter import ttk
 
 import piexif
@@ -134,12 +134,23 @@ class MetadataWidget(tk.Frame):
         return -90 <= lat <= 90 and -180 <= lon <= 180
 
     def date_valid(self):
-        try:
-            date_create_str = self.metadata_data.entries["date_creation"].get()
-            datetime.strptime(date_create_str, self.style_data.DISPLAYED_DATE_FORMAT)
-            return True
-        except (ValueError, TypeError):
+        date_str = self.metadata_data.entries["date_creation"].get()
+        if not date_str:
             return False
+        date_key = "date_creation"
+
+        for fmt in self.style_data.ACCEPTED_DATE_FORMATS:
+            try:
+                parse_date = datetime.strptime(date_str, fmt)
+                entry = self.metadata_data.entries[date_key]
+                entry.delete(0, tk.END)
+                entry.insert(0, parse_date)
+                self.event_bus.publish("metadata_updated", "edit")
+                return True
+            except ValueError:
+                continue
+
+        return False
 
     def reset(self, event, key, index):
         """Reset la valeur d'un input."""
