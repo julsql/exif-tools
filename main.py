@@ -1,3 +1,4 @@
+import re
 from tkinter import messagebox
 
 import requests
@@ -18,11 +19,13 @@ def check_update():
 
         latest_release = response.json()
         latest_version = latest_release['tag_name'].lstrip('v')
+        changelog = re.sub(r" \([0-9a-f]{40}\)", "", latest_release['body'])
 
         if version.parse(latest_version) > version.parse(VERSION):
             messagebox.showinfo(
                 "Mise à jour disponible",
-                f"Une nouvelle version {latest_version} est disponible."
+                "Une nouvelle version est disponible.\n\n" +
+                changelog
             )
 
     except requests.RequestException as e:
