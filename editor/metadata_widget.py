@@ -12,6 +12,7 @@ from editor.shared_data import ImageData, StyleData, MetadataData
 
 
 class MetadataWidget(tk.Frame):
+    DEFAULT_MESSAGE = "✅️ Aucune erreur"
     WARNING_MESSAGE = "⚠️ Attention : "
     LABELS = [{"key": "nom", "title": "Nom", "disable": True},
               {"key": "format", "title": "Format", "disable": True},
@@ -90,9 +91,10 @@ class MetadataWidget(tk.Frame):
 
             self.metadata_data.entries[label_data["key"]] = entry
 
-        self.errorLabel = tk.Label(self, text="", bg=style_data.BG_COLOR, fg=style_data.FONT_ERROR_COLOR,
+        self.errorLabel = tk.Label(self, text="", bg=style_data.BG_COLOR, fg=style_data.FONT_COLOR,
                                    font=style_data.FONT)
         self.errorLabel.grid(row=len(self.LABELS) + 2, column=0, columnspan=3, sticky="we", padx=5, pady=5)
+        self.errorLabel.configure(text=self.DEFAULT_MESSAGE)
 
         self.grid_columnconfigure(1, weight=1)
 
@@ -110,16 +112,20 @@ class MetadataWidget(tk.Frame):
 
     def on_validate_coordinates_change(self, event=None):
         if self.coordinates_valid():
-            self.errorLabel.configure(text="")
+            self.errorLabel.configure(text=self.DEFAULT_MESSAGE)
+            self.errorLabel.config(fg=self.style_data.FONT_COLOR)
             self.event_bus.publish("metadata_updated", "edit")
         else:
             self.errorLabel.configure(text=self.WARNING_MESSAGE + "Coordonnées invalides")
+            self.errorLabel.config(fg=self.style_data.FONT_ERROR_COLOR)
 
     def on_validate_date_change(self, event=None):
         if self.date_valid():
-            self.errorLabel.configure(text="")
+            self.errorLabel.configure(text=self.DEFAULT_MESSAGE)
+            self.errorLabel.config(fg=self.style_data.FONT_COLOR)
         else:
             self.errorLabel.configure(text=self.WARNING_MESSAGE + "Date invalide")
+            self.errorLabel.config(fg=self.style_data.FONT_ERROR_COLOR)
 
     def on_validate_date_change_focus_out(self, event=None):
         self.on_validate_date_change(event)
@@ -206,7 +212,8 @@ class MetadataWidget(tk.Frame):
         return None
 
     def update_metadata(self, publisher):
-        self.errorLabel.configure(text="")
+        self.errorLabel.configure(text=self.DEFAULT_MESSAGE)
+        self.errorLabel.config(fg=self.style_data.FONT_COLOR)
         if publisher == "open":
             data = self.get_data()
             if data:
