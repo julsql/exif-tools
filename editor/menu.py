@@ -1,5 +1,6 @@
 import platform
 import tkinter as tk
+import webbrowser
 from tkinter import messagebox
 
 
@@ -32,6 +33,7 @@ class MenuBar:
         # Menu Aide
         help_menu = tk.Menu(menu_bar, tearoff=0)
         help_menu.add_command(label="À propos", command=self.show_about)
+        help_menu.add_command(label="Mettre à jour", command=self.update)
         menu_bar.add_cascade(label="Aide", menu=help_menu)
 
         # Ajouter la barre de menu à la fenêtre principale
@@ -51,3 +53,7 @@ class MenuBar:
     def show_about(self):
         """Affiche une popup À propos"""
         messagebox.showinfo("À propos", "Éditeur Exif\nVersion 1.0.5\n© 2025 Jul SQL")
+
+    def update(self):
+        """Affiche une popup À propos"""
+        messagebox.showinfo("Mise à jour", "Pour mettre à jour, téléchargez la nouvelle version sur GitHub.\n\n https://github.com/julsql/exif-tools/releases/latest\n\nSinon, modifiez le fichier install.sh avec la nouvelle version (Version 1.0.5) et lancez le script dans un terminal.")
