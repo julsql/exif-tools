@@ -253,15 +253,24 @@ def get_date_taken(image, exif_date_format, displayed_date_format):
     except Exception:
         return None
     else:
-        date_prise_vue = exif_data.get("0th", {}).get(piexif.ImageIFD.DateTime)
+        # Liste des tags possibles
+        date_tags = [
+            (piexif.ExifIFD.DateTimeOriginal, "Exif"),   # 0x9003
+            (piexif.ExifIFD.DateTimeDigitized, "Exif"),  # 0x9004
+            (piexif.ImageIFD.DateTime, "0th"),           # 0x0132
+        ]
 
-        if date_prise_vue:
-            date_prise_vue = date_prise_vue.decode('utf-8')
-            date_obj = datetime.strptime(date_prise_vue, exif_date_format)
-            date_prise_vue_formattee = date_obj.strftime(displayed_date_format)
-            return date_prise_vue_formattee
-        else:
-            return None
+        for tag, section in date_tags:
+            date_prise_vue = exif_data.get(section, {}).get(tag)
+            if date_prise_vue:
+                try:
+                    date_prise_vue = date_prise_vue.decode("utf-8")
+                    date_obj = datetime.strptime(date_prise_vue, exif_date_format)
+                    return date_obj.strftime(displayed_date_format)
+                except Exception:
+                    continue
+
+        return None
 
 
 def get_date_modify(path):
