@@ -1,6 +1,6 @@
 # Exif tools
 
-Version : 1.0.6
+Version : 1.0.7
 
 Application pour visualiser et modifier les exif d'un photo.
 
