@@ -199,14 +199,33 @@ class ImageWidget(tk.Frame):
         return piexif.dump(exif_dict)
 
     def _clean_metadata(self, exif_dict):
-        if "1st" in exif_dict:
-            for tag in [piexif.ImageIFD.XResolution, piexif.ImageIFD.YResolution]:
-                if tag in exif_dict["1st"]:
-                    value = exif_dict["1st"][tag]
+        for ifd_name, ifd in exif_dict.items():
+            if isinstance(ifd, dict):
+                for tag, value in ifd.items():
                     if isinstance(value, int):
-                        exif_dict["1st"][tag] = (value, 1)
+                        ifd[tag] = (value, 1)
+
                     elif isinstance(value, tuple) and len(value) == 1:
-                        exif_dict["1st"][tag] = (value[0], 1)
+                        ifd[tag] = (value[0], 1)
+
+                    elif isinstance(value, str):
+                        ifd[tag] = value.encode('utf-8')
+
+                    elif isinstance(value, list):
+                        new_list = []
+                        for v in value:
+                            if isinstance(v, int):
+                                new_list.append((v, 1))
+                            elif isinstance(v, tuple):
+                                if len(v) == 1:
+                                    new_list.append((v[0], 1))
+                                else:
+                                    new_list.append(v)
+                            else:
+                                new_list.append(v)
+                        ifd[tag] = new_list
+        return exif_dict
+
 
     def _update_exif_longitude(self, exif_dict, longitude):
         if longitude == "":

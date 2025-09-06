@@ -81,7 +81,7 @@ class MapWidget(tk.Frame):
     def add_marker_event(self, coords, origin=False):
         """Ajoute un marqueur à l'emplacement donné sur la carte."""
 
-        if origin:
+        if origin and self.new_marker:
             self.new_marker.delete()
             return
 
