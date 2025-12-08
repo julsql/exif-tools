@@ -135,7 +135,6 @@ class ExifEditorApp:
         self.main_pane.sash_place(0, main_x, 0)
 
     def on_close(self):
-        print(self.right_pane.map.zoom)
         self.config.set("left_split", self.left_pane.sash_coord(0)[1])
         self.config.set("main_split", self.main_pane.sash_coord(0)[0])
         self.config.set("geometry", self.root.geometry())
