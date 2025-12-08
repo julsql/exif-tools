@@ -197,18 +197,26 @@ class MetadataWidget(tk.Frame):
         path = self.image_data.image_path
 
         if image and path:
+            name = get_name(path)
+            image_format = get_format(image)
+            weight = get_weight(path)
+            size = get_size(image)
+            device = get_device(image)
+            date_taken = get_date_taken(image, self.style_data.EXIF_DATE_FORMAT,
+                                  self.style_data.DISPLAYED_DATE_FORMAT)
+            updated_date = get_date_modify(path)
             latitude, longitude = get_coordinates(image)
-            return [{"key": "nom", "value": get_name(path)},
-                    {"key": "format", "value": get_format(image)},
-                    {"key": "poids", "value": get_poids(path)},
-                    {"key": "dimensions", "value": get_size(image)},
-                    {"key": "appareil", "value": get_device(image)},
-                    {"key": "date_creation", "value": get_date_taken(image, self.style_data.EXIF_DATE_FORMAT,
-                                                                     self.style_data.DISPLAYED_DATE_FORMAT)},
-                    {"key": "date_modification", "value": get_date_modify(path)},
-                    {"key": "latitude", "value": latitude},
-                    {"key": "longitude", "value": longitude},
-                    ]
+            return [
+                {"key": "nom", "value": name},
+                {"key": "format", "value": image_format},
+                {"key": "poids", "value": weight},
+                {"key": "dimensions", "value": size},
+                {"key": "appareil", "value": device},
+                {"key": "date_creation", "value": date_taken},
+                {"key": "date_modification", "value": updated_date},
+                {"key": "latitude", "value": latitude},
+                {"key": "longitude", "value": longitude},
+            ]
         return None
 
     def update_metadata(self, publisher):
@@ -279,7 +287,7 @@ def get_date_modify(path):
     return date_modification
 
 
-def get_poids(path):
+def get_weight(path):
     poids_image = os.path.getsize(path)
     poids_image_ko = (poids_image / 1024)
     return f"{poids_image_ko:.2f} Ko"
@@ -318,6 +326,19 @@ def get_size(image):
     return f"{image.width} x {image.height}"
 
 
+def check_validity(values):
+    if not values:
+        return False
+    if not isinstance(values, (list, tuple)) or len(values) != 3:
+        return False
+    for value in values:
+        if not isinstance(value, (list, tuple)) or len(value) != 2:
+            return False
+        if value[1] == 0:
+            return False
+    return True
+
+
 def get_geotagging(exif_data):
     """Extrait les données GPS du dictionnaire EXIF"""
     if "GPS" in exif_data:
@@ -325,7 +346,7 @@ def get_geotagging(exif_data):
         latitude = gps_data.get(piexif.GPSIFD.GPSLatitude)
         longitude = gps_data.get(piexif.GPSIFD.GPSLongitude)
 
-        if latitude and longitude:
+        if check_validity(latitude) and check_validity(longitude):
             lat_deg = latitude[0][0] / latitude[0][1]
             lat_min = latitude[1][0] / latitude[1][1]
             lat_sec = latitude[2][0] / latitude[2][1]
@@ -350,11 +371,10 @@ def get_coordinates(image):
     """Retourne les coordonnées GPS d'une image si disponibles"""
     try:
         exif_data = piexif.load(image.info['exif'])
-    except Exception:
-        return None, None
-    else:
         latitude, longitude = get_geotagging(exif_data)
         if latitude is not None and longitude is not None:
             return latitude, longitude
         else:
             return None, None
+    except Exception:
+        return None, None

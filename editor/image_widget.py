@@ -224,6 +224,7 @@ class ImageWidget(tk.Frame):
                             else:
                                 new_list.append(v)
                         ifd[tag] = new_list
+        exif_dict["Exif"].pop(37500, None)
         return exif_dict
 
 
