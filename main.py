@@ -19,7 +19,7 @@ def check_update():
 
         latest_release = response.json()
         latest_version = latest_release['tag_name'].lstrip('v')
-        changelog = re.sub(r" \([0-9a-f]{40}\)", "", latest_release['body'])
+        changelog = re.sub(r" \([0-9a-f]{40}( & [0-9a-f]{40})*\)", "", latest_release['body'])
 
         if version.parse(latest_version) > version.parse(VERSION):
             messagebox.showinfo(
