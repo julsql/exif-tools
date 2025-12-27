@@ -5,7 +5,7 @@ from datetime import datetime
 from tkinter import filedialog
 
 import piexif
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageOps
 
 from editor import resource_path
 from editor.notification_popup import ToastNotification
@@ -323,6 +323,10 @@ class ImageWidget(tk.Frame):
         """Charge l'image en entier et l'affiche dans la zone vide"""
         try:
             image = Image.open(self.image_data.image_path)
+
+            # ✅ Applique automatiquement la rotation EXIF
+            image = ImageOps.exif_transpose(image)
+
             self.image_data.pil_image = image
             self.image_data.image_open = True
             self.reset_image()
