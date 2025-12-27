@@ -55,7 +55,7 @@ pip install -r requirements.txt
 pip install pyinstaller
 
 echo "⚙️ Compilation de l'application avec PyInstaller..."
-pyinstaller --onefile --windowed --name "ExifTools" --hidden-import=piexif --hidden-import=PIL._tkinter_finder --add-data "assets:assets" main.py
+pyinstaller --clean --onefile --windowed --name "ExifTools" --hidden-import=piexif --hidden-import=PIL._tkinter_finder --add-data "assets:assets" main.py
 
 echo "🔚 Désactivation de l'environnement virtuel..."
 deactivate

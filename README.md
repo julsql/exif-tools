@@ -2,7 +2,7 @@
 
 Version : 1.0.9
 
-Application pour visualiser et modifier les exif d'un photo.
+Application pour visualiser et modifier les exif d'une photo.
 
 - Ouvrir la photo et la visualiser
 - Visualiser ses métadonnées (nom, format, poids, dimensions, date de prise de vue/modification, coordonnées gps)
@@ -17,7 +17,7 @@ pip install -r requirements.txt
 python3 main.py
 ```
 
-Pour incrémenter de version, modifier le fichier `version.txt`et lancer
+Pour incrémenter de version, modifier le fichier `version.txt` et lancer
 
 ```shell
 python3 bump_version.py
@@ -31,7 +31,7 @@ Dans une machine linux (ou VM)
 
 ```bash
 pip install pyinstaller
-pyinstaller --onefile --windowed --name "ExifTools" --hidden-import=piexif --hidden-import=PIL._tkinter_finder --add-data "assets:assets" main.py
+pyinstaller --clean --onefile --windowed --name "ExifTools" --hidden-import=piexif --hidden-import=PIL._tkinter_finder --add-data "assets:assets" main.py
 ```
 
 ### Faire l'application linux
