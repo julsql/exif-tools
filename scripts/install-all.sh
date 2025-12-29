@@ -6,7 +6,7 @@ trap 'echo "❌ Une erreur est survenue. Installation interrompue."' ERR
 # === Config personnalisable ===
 APP_NAME="Éditeur Exif"
 APP_COMMENT="Outil de gestion des métadonnées EXIF"
-VERSION="1.0.9"
+VERSION="1.1.0"
 APP_DIR="$HOME/.exiftools"
 APP_FOLDER="$PWD/exif-tools-$VERSION"
 APP_REPO_URL="https://github.com/julsql/exif-tools/archive/refs/tags/$VERSION.zip"
