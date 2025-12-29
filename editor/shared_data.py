@@ -60,3 +60,4 @@ class StyleData:
 
         self.FONT = ("Segoe UI", 14)
         self.TITLE_FONT = ("Segoe UI", 18, "bold")
+        self.SELECT_CURSOR = "hand2"

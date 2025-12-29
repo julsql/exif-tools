@@ -41,7 +41,7 @@ class MetadataWidget(tk.Frame):
 
         assets_path = resource_path("assets/")
         self.reset_icon = load_icon(os.path.join(assets_path, style_data.MODE, "reset.png"), 20)
-        self.reset_button = tk.Label(self, image=self.reset_icon, bg=style_data.BG_COLOR, padx=0)
+        self.reset_button = tk.Label(self, image=self.reset_icon, bg=style_data.BG_COLOR, padx=0, cursor=style_data.SELECT_CURSOR)
         self.reset_button.grid(row=0, column=0, sticky="w")
         self.reset_button.bind(button_event, self.reset_all)
 
@@ -84,7 +84,7 @@ class MetadataWidget(tk.Frame):
             if label_data["disable"]:
                 entry.config(state="readonly")
             else:
-                btn_reset = tk.Label(self, image=self.reset_icon, bg=style_data.BG_COLOR, padx=0)
+                btn_reset = tk.Label(self, image=self.reset_icon, bg=style_data.BG_COLOR, padx=0, cursor=style_data.SELECT_CURSOR)
                 btn_reset.bind(button_event,
                                lambda event, local_key=label_data["key"], index=i: self.reset(event, local_key, index))
                 btn_reset.grid(row=i + 1, column=2, padx=5, pady=5)

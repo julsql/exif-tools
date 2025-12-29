@@ -58,17 +58,17 @@ class ImageWidget(tk.Frame):
         self.prev_icon = load_icon(os.path.join(assets_path, style_data.MODE, "arrow_left.png"), icon_height)
         self.next_icon = load_icon(os.path.join(assets_path, style_data.MODE, "arrow_right.png"), icon_height)
 
-        self.icon_label1 = tk.Label(self.top_frame, image=self.save_icon, bg=style_data.BG_TAB_COLOR, cursor="hand2")
+        self.icon_label1 = tk.Label(self.top_frame, image=self.save_icon, bg=style_data.BG_TAB_COLOR, cursor=style_data.SELECT_CURSOR)
         self.icon_label1.grid(row=0, column=0, padx=icon_padding)
 
-        self.icon_label2 = tk.Label(self.top_frame, image=self.save_as_icon, bg=style_data.BG_TAB_COLOR, cursor="hand2")
+        self.icon_label2 = tk.Label(self.top_frame, image=self.save_as_icon, bg=style_data.BG_TAB_COLOR, cursor=style_data.SELECT_CURSOR)
         self.icon_label2.grid(row=0, column=1, padx=icon_padding)
 
         self.icon_label3 = tk.Label(self.top_frame, image=self.add_photo_icon, bg=style_data.BG_TAB_COLOR,
-                                    cursor="hand2")
+                                    cursor=style_data.SELECT_CURSOR)
         self.icon_label3.grid(row=0, column=2, padx=icon_padding)
 
-        self.icon_label4 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.BG_TAB_COLOR, cursor="hand2")
+        self.icon_label4 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.BG_TAB_COLOR, cursor=style_data.SELECT_CURSOR)
         self.icon_label4.grid(row=0, column=3, padx=icon_padding, sticky="e")
 
         # Zone d'affichage de l'image
@@ -78,10 +78,10 @@ class ImageWidget(tk.Frame):
         nav_frame = tk.Frame(self, bg=self.style_data.BG_COLOR)
         nav_frame.grid(row=3, column=0, pady=8)
 
-        self.prev_btn = tk.Label(nav_frame, image=self.prev_icon, bg=self.style_data.BG_COLOR, cursor="hand2")
+        self.prev_btn = tk.Label(nav_frame, image=self.prev_icon, bg=self.style_data.BG_COLOR, cursor=style_data.SELECT_CURSOR)
         self.prev_btn.pack(side="left", padx=20)
 
-        self.next_btn = tk.Label(nav_frame, image=self.next_icon, bg=self.style_data.BG_COLOR, cursor="hand2")
+        self.next_btn = tk.Label(nav_frame, image=self.next_icon, bg=self.style_data.BG_COLOR, cursor=style_data.SELECT_CURSOR)
         self.next_btn.pack(side="right", padx=20)
 
         self.image_area_place_config = {
@@ -419,7 +419,7 @@ class ImageWidget(tk.Frame):
     def hide_image(self):
         self.image_display.place_forget()
         self.image_area_frame = tk.Frame(self.image_area, bg=self.style_data.BG_COLOR, bd=2, relief="groove",
-                                         cursor="hand2")
+                                         cursor=self.style_data.SELECT_CURSOR)
         self.image_area_frame.bind("<Button-1>", self.open_file_dialog_on_click)
         self.image_area_frame.place(**self.image_area_place_config)
         self.image_area_frame.config(padx=10, pady=10)
