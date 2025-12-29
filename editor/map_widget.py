@@ -11,6 +11,7 @@ class MapWidget(tk.Frame):
 
     def __init__(self, parent, event_bus, image_data: ImageData, position: tuple[int, int], zoom: int, metadata_data: MetadataData, style_data: StyleData):
         super().__init__(parent)
+        self._origin_after_id = None
 
         self.event_bus = event_bus
         self.image_data = image_data
@@ -45,20 +46,38 @@ class MapWidget(tk.Frame):
     def delete_markers(self):
         """Supprimer tous les marqueurs."""
         if self.origin_marker:
-            self.origin_marker.delete()
+            try:
+                self.origin_marker.delete()
+            except Exception:
+                pass
+            self.origin_marker = None
+
         if self.new_marker:
-            self.new_marker.delete()
+            try:
+                self.new_marker.delete()
+            except Exception:
+                pass
+            self.new_marker = None
 
     def update_origin(self, publisher):
+        """Évite le spam"""
+        if self._origin_after_id:
+            self.after_cancel(self._origin_after_id)
+
+        self._origin_after_id = self.after(50, lambda: self._update_origin(publisher))
+
+    def _update_origin(self, publisher):
         """Met à jour les marqueurs selon l'événement reçu."""
         if publisher == "open":
-            coordinates = self.get_coordinates()
-            self.add_origin_marker_event(coordinates)
+            coords = self.get_coordinates()
+            self.add_origin_marker_event(coords)
+
         elif publisher == "close":
             self.delete_markers()
+
         elif publisher == "edit":
-            coordinates = self.get_coordinates()
-            self.add_marker_event(coordinates, coordinates == get_coordinates(self.image_data.pil_image))
+            coords = self.get_coordinates()
+            self.add_marker_event(coords, coords == get_coordinates(self.image_data.pil_image))
 
     def get_coordinates(self):
         """Récupère les coordonnées à partir des champs de métadonnées."""
@@ -71,8 +90,8 @@ class MapWidget(tk.Frame):
 
     def add_origin_marker_event(self, coords):
         """Ajoute un marqueur à l'emplacement donné sur la carte."""
-        self.event_bus.publish("metadata_updated", "add_marker")
         self.delete_markers()
+        self.update_idletasks()
 
         if coords:
             self.map.set_position(*coords)
@@ -89,8 +108,6 @@ class MapWidget(tk.Frame):
             self.new_marker.delete()
 
         if coords and self.image_data.image_open:
-            self.event_bus.publish("metadata_updated", "add_marker")
-
             self.metadata_data.entries["latitude"].delete(0, tk.END)
             self.metadata_data.entries["latitude"].insert(0, coords[0])
             self.metadata_data.entries["longitude"].delete(0, tk.END)
