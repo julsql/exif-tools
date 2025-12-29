@@ -31,6 +31,9 @@ class ImageWidget(tk.Frame):
         icon_padding = 4
         icon_height = 20
 
+        self.image_list = []
+        self.current_index = -1
+
         super().__init__(parent)
         self.event_bus = event_bus
         self.image_data = image_data
@@ -52,22 +55,34 @@ class ImageWidget(tk.Frame):
         self.save_as_icon = load_icon(os.path.join(assets_path, style_data.MODE, "save_as.png"), icon_height)
         self.add_photo_icon = load_icon(os.path.join(assets_path, style_data.MODE, "folder_open.png"), icon_height)
         self.close_icon = load_icon(os.path.join(assets_path, style_data.MODE, "close.png"), icon_height)
+        self.prev_icon = load_icon(os.path.join(assets_path, style_data.MODE, "arrow_left.png"), icon_height)
+        self.next_icon = load_icon(os.path.join(assets_path, style_data.MODE, "arrow_right.png"), icon_height)
 
-        self.icon_label1 = tk.Label(self.top_frame, image=self.save_icon, bg=style_data.BG_TAB_COLOR)
+        self.icon_label1 = tk.Label(self.top_frame, image=self.save_icon, bg=style_data.BG_TAB_COLOR, cursor="hand2")
         self.icon_label1.grid(row=0, column=0, padx=icon_padding)
 
-        self.icon_label2 = tk.Label(self.top_frame, image=self.save_as_icon, bg=style_data.BG_TAB_COLOR)
+        self.icon_label2 = tk.Label(self.top_frame, image=self.save_as_icon, bg=style_data.BG_TAB_COLOR, cursor="hand2")
         self.icon_label2.grid(row=0, column=1, padx=icon_padding)
 
-        self.icon_label3 = tk.Label(self.top_frame, image=self.add_photo_icon, bg=style_data.BG_TAB_COLOR)
+        self.icon_label3 = tk.Label(self.top_frame, image=self.add_photo_icon, bg=style_data.BG_TAB_COLOR,
+                                    cursor="hand2")
         self.icon_label3.grid(row=0, column=2, padx=icon_padding)
 
-        self.icon_label4 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.BG_TAB_COLOR)
+        self.icon_label4 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.BG_TAB_COLOR, cursor="hand2")
         self.icon_label4.grid(row=0, column=3, padx=icon_padding, sticky="e")
 
         # Zone d'affichage de l'image
         self.image_area = tk.Label(self, bg=style_data.BG_COLOR)
         self.image_area.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+
+        nav_frame = tk.Frame(self, bg=self.style_data.BG_COLOR)
+        nav_frame.grid(row=3, column=0, pady=8)
+
+        self.prev_btn = tk.Label(nav_frame, image=self.prev_icon, bg=self.style_data.BG_COLOR, cursor="hand2")
+        self.prev_btn.pack(side="left", padx=20)
+
+        self.next_btn = tk.Label(nav_frame, image=self.next_icon, bg=self.style_data.BG_COLOR, cursor="hand2")
+        self.next_btn.pack(side="right", padx=20)
 
         self.image_area_place_config = {
             "relx": 0,
@@ -100,6 +115,8 @@ class ImageWidget(tk.Frame):
         self.icon_label2.bind(button_event, self.save_as)
         self.icon_label3.bind(button_event, self.open_file_dialog)
         self.icon_label4.bind(button_event, self.close_image)
+        self.prev_btn.bind(button_event, self.prev_image)
+        self.next_btn.bind(button_event, self.next_image)
 
         self.loaded_image = None
 
@@ -227,7 +244,6 @@ class ImageWidget(tk.Frame):
         exif_dict["Exif"].pop(37500, None)
         return exif_dict
 
-
     def _update_exif_longitude(self, exif_dict, longitude):
         if longitude == "":
             if piexif.GPSIFD.GPSLongitudeRef in exif_dict['GPS']:
@@ -267,6 +283,9 @@ class ImageWidget(tk.Frame):
 
     def close_image(self, event=None):
         """Ferme l'image."""
+        self.image_list = []
+        self.current_index = -1
+
         self.loaded_image = None
         if self.image_display:
             self.image_display.config(image='')
@@ -286,22 +305,86 @@ class ImageWidget(tk.Frame):
             ext = os.path.splitext(file_path)[1].lower()
             if ext in self.EXTENSIONS_LIST:
                 self.image_data.image_path = file_path
+                self.load_folder(os.path.dirname(file_path))
                 self.load_image()
             else:
                 print("Format de fichier non pris en charge.")
-
-    def open_file_dialog(self, event=None):
-        file_path = filedialog.askopenfilename(filetypes=[("Images", self.EXTENSIONS)])
-        if file_path:
-            self.image_data.image_path = file_path
-            self.load_image()
 
     def open_file_dialog_on_click(self, event=None):
         if not self.image_data.image_open:
             file_path = filedialog.askopenfilename(filetypes=[("Images", self.EXTENSIONS)])
             if file_path:
                 self.image_data.image_path = file_path
+                self.load_folder(os.path.dirname(file_path))
                 self.load_image()
+
+    def build_image_list_from_path(self, image_path):
+        folder = os.path.dirname(image_path)
+
+        images = [
+            os.path.join(folder, f)
+            for f in os.listdir(folder)
+            if os.path.splitext(f)[1].lower() in self.EXTENSIONS_LIST
+        ]
+
+        images.sort(key=lambda x: os.path.getctime(x))
+
+        self.image_list = images
+        self.current_index = images.index(image_path)
+
+    def open_file_dialog(self, event=None):
+        file_path = filedialog.askopenfilename(
+            filetypes=[("Images", self.EXTENSIONS)]
+        )
+
+        if file_path:
+            self.image_data.image_path = file_path
+            self.build_image_list_from_path(file_path)
+            self.load_image()
+
+    def load_folder(self, folder):
+        images = [
+            os.path.join(folder, f)
+            for f in os.listdir(folder)
+            if os.path.splitext(f)[1].lower() in self.EXTENSIONS_LIST
+        ]
+
+        images.sort(key=lambda x: os.path.basename(x).lower())
+
+        if not images:
+            return
+
+        self.image_list = images
+        try:
+            self.current_index = images.index(self.image_data.image_path)
+        except ValueError:
+            self.current_index = 0
+
+    def load_single_image(self, path):
+        self.image_data.image_path = path
+        self.load_image()
+
+    def next_image(self, event=None):
+        if not self.image_list:
+            return
+
+        if self.image_data.image_open:
+            self.save()
+
+        self.current_index = (self.current_index + 1) % len(self.image_list)
+        self.image_data.image_path = self.image_list[self.current_index]
+        self.load_image()
+
+    def prev_image(self, event=None):
+        if not self.image_list:
+            return
+
+        if self.image_data.image_open:
+            self.save()
+
+        self.current_index = (self.current_index - 1) % len(self.image_list)
+        self.image_data.image_path = self.image_list[self.current_index]
+        self.load_image()
 
     def reset_image(self, event=None):
         if self.image_data.image_open:
@@ -324,7 +407,6 @@ class ImageWidget(tk.Frame):
         try:
             image = Image.open(self.image_data.image_path)
 
-            # ✅ Applique automatiquement la rotation EXIF
             image = ImageOps.exif_transpose(image)
 
             self.image_data.pil_image = image

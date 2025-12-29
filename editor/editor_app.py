@@ -72,6 +72,8 @@ class ExifEditorApp:
                                 self.reset_window,
                                 self.image_content.open_file_dialog,
                                 self.image_content.close_image,
+                                self.image_content.next_image,
+                                self.image_content.prev_image,
                                 self.metadata_content.reset_all,
                                 self.image_content.save,
                                 self.image_content.save_as)
