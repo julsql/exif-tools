@@ -1,14 +1,20 @@
 import platform
 import tkinter as tk
-import webbrowser
 from tkinter import messagebox
+
+from editor.config_manager import ConfigManager
+from editor.event_bus import EventBus
+from editor.shared_data import StyleData
 
 
 class MenuBar:
     OS_CTRL = 'Command' if platform.system() == 'Darwin' else 'Control'
 
-    def __init__(self, root, reset_callback, open_image_callback, close_image_callback, next_image, prev_image, reset_values, save, save_as):
+    def __init__(self, root, reset_callback, open_image_callback, close_image_callback, next_image, prev_image, reset_values, save, save_as, style_data: StyleData, event_bus: EventBus, config: ConfigManager):
         self.root = root
+        self.style_data = style_data
+        self.event_bus = event_bus
+        self.config = config
 
         # Barre de menus
         menu_bar = tk.Menu(root)
@@ -19,6 +25,14 @@ class MenuBar:
                                 accelerator=self._format_accel("R"))
         outils_menu.add_command(label="Réinitialiser les valeurs", command=reset_values,
                                 accelerator=self._format_accel("Shift+R"))
+
+        if self.config.get('map', self.style_data.DEFAULT_MAP) == self.style_data.DEFAULT_MAP:
+            switch_map_label = "Utiliser une carte internationale"
+        else:
+            switch_map_label = "Utiliser une carte française"
+
+        outils_menu.add_command(label=switch_map_label, command=self.switch_map)
+        self.outils_menu = outils_menu
         menu_bar.add_cascade(label="Fenêtre", menu=outils_menu)
 
         # Menu Fichier
@@ -61,3 +75,15 @@ class MenuBar:
     def update(self):
         """Affiche une popup À propos"""
         messagebox.showinfo("Mise à jour", "Pour mettre à jour, téléchargez la nouvelle version sur GitHub.\n\n https://github.com/julsql/exif-tools/releases/latest\n\nSinon, modifiez le fichier install.sh avec la nouvelle version (Version 1.1.0) et lancez le script dans un terminal.")
+
+    def switch_map(self):
+        old_map_tiles = self.config.get('map', self.style_data.DEFAULT_MAP)
+        print(old_map_tiles)
+        if old_map_tiles == "french":
+            self.config.set("map", "international")
+        else:
+            self.config.set("map", "french")
+        self.event_bus.publish("metadata_updated", "update-map")
+
+        label = self.style_data.MAPS_SWITCH_LABEL[old_map_tiles]
+        self.outils_menu.entryconfig(2, label=label)

@@ -3,13 +3,17 @@ import tkinter as tk
 import tkintermapview
 
 from editor import resource_path
+from editor.config_manager import ConfigManager
 from editor.metadata_widget import get_coordinates
 from editor.shared_data import MetadataData, StyleData, ImageData
 
 
 class MapWidget(tk.Frame):
+    COORDINATES_PARIS = (48.8566, 2.3522)
+    DEFAULT_ZOOM = 5
 
-    def __init__(self, parent, event_bus, image_data: ImageData, position: tuple[int, int], zoom: int, metadata_data: MetadataData, style_data: StyleData):
+    def __init__(self, parent, event_bus, image_data: ImageData,
+                 metadata_data: MetadataData, style_data: StyleData, config: ConfigManager):
         super().__init__(parent)
         self._origin_after_id = None
 
@@ -17,15 +21,18 @@ class MapWidget(tk.Frame):
         self.image_data = image_data
         self.metadata_data = metadata_data
         self.style_data = style_data
+        self.config = config
         self.parent = parent
+
+        position = self.config.get('position', self.COORDINATES_PARIS)
+        zoom = self.config.get('zoom', self.DEFAULT_ZOOM)
 
         self.red_icon = tk.PhotoImage(file=resource_path("assets/marker-red.png"))
         self.blue_icon = tk.PhotoImage(file=resource_path("assets/marker-blue.png"))
 
         self.map = tkintermapview.TkinterMapView(self, width=800, height=600)
 
-        self.map.set_tile_server("https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png")
-        # self.map.set_tile_server("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png")
+        self.set_map_tiles()
 
         self.map.pack(fill="both", expand=True)
 
@@ -37,6 +44,10 @@ class MapWidget(tk.Frame):
         self.map.add_left_click_map_command(self.add_marker_event)
 
         self.event_bus.subscribe("metadata_updated", self.update_origin)
+
+    def set_map_tiles(self):
+        map_tiles = self.config.get('map', self.style_data.DEFAULT_MAP)
+        self.map.set_tile_server(self.style_data.MAPS[map_tiles])
 
     def reset_position(self, position, zoom):
         """Reset la position et le zoom de la carte."""
@@ -78,6 +89,9 @@ class MapWidget(tk.Frame):
         elif publisher == "edit":
             coords = self.get_coordinates()
             self.add_marker_event(coords, coords == get_coordinates(self.image_data.pil_image))
+
+        elif publisher == "update-map":
+            self.set_map_tiles()
 
     def get_coordinates(self):
         """Récupère les coordonnées à partir des champs de métadonnées."""

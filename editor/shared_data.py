@@ -33,6 +33,16 @@ class StyleData:
         '%d/%m/%Y %H-%M',
         '%d/%m/%Y',
     ]
+    FONT = ("Segoe UI", 14)
+    TITLE_FONT = ("Segoe UI", 18, "bold")
+    SELECT_CURSOR = "hand2"
+    DEFAULT_MAP = "french"
+    MAPS = {"french": "https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
+            "international": "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"}
+    MAPS_SWITCH_LABEL = {
+        "french": "Utiliser une carte française",
+        "international": "Utiliser une carte internationale"
+    }
 
     def __init__(self):
         if self.MODE == "dark":
@@ -57,7 +67,3 @@ class StyleData:
             self.FONT_ERROR_COLOR = "#d32f2f"
             self.BUTTON_COLOR = "#e0e0e0"
             self.BUTTON_HOVER_COLOR = "#d0d0d0"
-
-        self.FONT = ("Segoe UI", 14)
-        self.TITLE_FONT = ("Segoe UI", 18, "bold")
-        self.SELECT_CURSOR = "hand2"

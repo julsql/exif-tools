@@ -18,8 +18,7 @@ class ExifEditorApp:
     DEFAULT_HEIGHT = 800
     DEFAULT_WIDTH = 1200
     DEFAULT_GEOMETRY = f"{DEFAULT_WIDTH}x{DEFAULT_HEIGHT}"
-    COORDINATES_PARIS = (48.8566, 2.3522)
-    DEFAULT_ZOOM = 5
+
     DEFAULT_APP_TITLE = "Éditeur Exif"
 
     def __init__(self, root):
@@ -61,8 +60,8 @@ class ExifEditorApp:
                                                self.style_data)
         self.left_pane.add(self.metadata_content)
 
-        self.right_pane = MapWidget(self.main_pane, self.event_bus, self.image_data, self.config.get('position', self.COORDINATES_PARIS), self.config.get('zoom', self.DEFAULT_ZOOM), self.metadata_data,
-                                    self.style_data)
+        self.right_pane = MapWidget(self.main_pane, self.event_bus, self.image_data, self.metadata_data,
+                                    self.style_data, self.config)
         self.main_pane.add(self.right_pane)
 
         self.main_pane.bind("<Double-Button-1>", self.reset_main_split)
@@ -76,7 +75,10 @@ class ExifEditorApp:
                                 self.image_content.prev_image,
                                 self.metadata_content.reset_all,
                                 self.image_content.save,
-                                self.image_content.save_as)
+                                self.image_content.save_as,
+                                self.style_data,
+                                self.event_bus,
+                                self.config)
 
         self.resize_after_id = None
         root.bind("<Configure>", self.on_resize)
@@ -118,14 +120,14 @@ class ExifEditorApp:
 
         self.main_pane.sash_place(0, self.vertical_default_ratio(self.DEFAULT_WIDTH), 0)
         self.left_pane.sash_place(0, 0, self.horizontal_default_ratio(self.DEFAULT_HEIGHT))
-        self.right_pane.reset_position(self.COORDINATES_PARIS, self.DEFAULT_ZOOM)
+        self.right_pane.reset_position(MapWidget.COORDINATES_PARIS, MapWidget.DEFAULT_ZOOM)
 
         # Supprime la config sauvegardée pour que ça redémarre proprement
         self.config.set("main_split", self.vertical_default_ratio())
         self.config.set("left_split", self.horizontal_default_ratio())
         self.config.set("geometry", self.DEFAULT_GEOMETRY)
-        self.config.set("position", self.COORDINATES_PARIS)
-        self.config.set("zoom", self.DEFAULT_ZOOM)
+        self.config.set("position", MapWidget.COORDINATES_PARIS)
+        self.config.set("zoom", MapWidget.DEFAULT_ZOOM)
         self.config.save()
 
 
