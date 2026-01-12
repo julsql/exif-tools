@@ -41,7 +41,8 @@ class MapWidget(tk.Frame):
         self.origin_marker = None
         self.new_marker = None
 
-        self.map.add_left_click_map_command(self.add_marker_event)
+        self.map.canvas.bind("<Button-3>", self._on_right_click)
+        self.map.canvas.bind("<Button-2>", self._on_right_click)
 
         self.event_bus.subscribe("metadata_updated", self.update_origin)
 
@@ -111,10 +112,22 @@ class MapWidget(tk.Frame):
             self.map.set_position(*coords)
             self.origin_marker = self.map.set_marker(coords[0], coords[1], text="Origine", icon=self.red_icon)
 
+    def _on_right_click(self, event):
+        x, y = event.x, event.y
+
+        coords = self.map.convert_canvas_coords_to_decimal_coords(x, y)
+        if not coords:
+            return
+
+        self.add_marker_event(coords)
+
+        return "break"
+
     def add_marker_event(self, coords, origin=False):
         """Ajoute un marqueur à l'emplacement donné sur la carte."""
 
         if origin and self.new_marker:
+            # Le marqueur d'origine change
             self.new_marker.delete()
             return
 
