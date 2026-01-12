@@ -138,7 +138,11 @@ class ImageWidget(tk.Frame):
         longitude = self._parse_coordinate(longitude_str)
 
         # Mettre à jour les métadonnées EXIF
-        exif_bytes = self._update_exif_metadata(image, date, latitude, longitude)
+        try:
+            exif_bytes = self._update_exif_metadata(image, date, latitude, longitude)
+        except Exception as e:
+            ToastNotification(self.root, self.style_data, "Problème avec la sauvegarde")
+            return False
         if new_path:
             path = new_path
         piexif.insert(exif_bytes, path)
