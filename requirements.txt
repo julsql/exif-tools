@@ -15,4 +15,4 @@ requests==2.32.4
 six==1.17.0
 tkinterdnd2==0.4.3
 tkintermapview==1.29
-urllib3==2.6.0
+urllib3==2.6.3
