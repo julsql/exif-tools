@@ -72,11 +72,11 @@ class MenuBar:
 
     def show_about(self):
         """Affiche une popup À propos"""
-        messagebox.showinfo("À propos", "Éditeur Exif\nVersion 1.1.1\n© 2025 Jul SQL")
+        messagebox.showinfo("À propos", "Éditeur Exif\nVersion 1.2.0\n© 2025 Jul SQL")
 
     def update(self):
         """Affiche une popup À propos"""
-        messagebox.showinfo("Mise à jour", "Pour mettre à jour, téléchargez la nouvelle version sur GitHub.\n\n https://github.com/julsql/exif-tools/releases/latest\n\nSinon, modifiez le fichier install.sh avec la nouvelle version (Version 1.1.1) et lancez le script dans un terminal.")
+        messagebox.showinfo("Mise à jour", "Pour mettre à jour, téléchargez la nouvelle version sur GitHub.\n\n https://github.com/julsql/exif-tools/releases/latest\n\nSinon, modifiez le fichier install.sh avec la nouvelle version (Version 1.2.0) et lancez le script dans un terminal.")
 
     def switch_map(self):
         old_map_tiles = self.config.get('map', self.style_data.DEFAULT_MAP)
