@@ -10,7 +10,7 @@ from editor.shared_data import StyleData
 class MenuBar:
     OS_CTRL = 'Command' if platform.system() == 'Darwin' else 'Control'
 
-    def __init__(self, root, reset_callback, open_image_callback, close_image_callback, next_image, prev_image, reset_values, save, save_as, style_data: StyleData, event_bus: EventBus, config: ConfigManager):
+    def __init__(self, root, reset_callback, open_image_callback, close_image_callback, recenter_callback, next_image, prev_image, reset_values, save, save_as, style_data: StyleData, event_bus: EventBus, config: ConfigManager):
         self.root = root
         self.style_data = style_data
         self.event_bus = event_bus
@@ -42,6 +42,7 @@ class MenuBar:
         file_menu.add_command(label="Ouvrir une image", command=open_image_callback,
                               accelerator=self._format_accel("O"))
         file_menu.add_command(label="Fermer l'image", command=close_image_callback, accelerator=self._format_accel("W"))
+        file_menu.add_command(label="Ajouter un marqueur centré", command=recenter_callback, accelerator=self._format_accel("D"))
         file_menu.add_command(label="Image suivante", command=next_image, accelerator="Right")
         file_menu.add_command(label="Image précédente", command=prev_image, accelerator="Left")
         menu_bar.add_cascade(label="Fichier", menu=file_menu)
@@ -59,6 +60,7 @@ class MenuBar:
         root.bind_all(f'<{self.OS_CTRL}-Shift-S>', save_as)
         root.bind_all(f'<{self.OS_CTRL}-o>', open_image_callback)
         root.bind_all(f'<{self.OS_CTRL}-w>', close_image_callback)
+        root.bind_all(f'<{self.OS_CTRL}-d>', recenter_callback)
         root.bind_all("<Left>", prev_image)
         root.bind_all("<Right>", next_image)
         root.bind_all(f'<{self.OS_CTRL}-r>', reset_callback)

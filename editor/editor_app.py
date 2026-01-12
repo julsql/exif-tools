@@ -51,18 +51,18 @@ class ExifEditorApp:
 
         self.left_pane = tk.PanedWindow(self.main_pane, orient=tk.VERTICAL, bg=self.style_data.BORDER_COLOR)
         self.main_pane.add(self.left_pane)
+        self.right_pane = MapWidget(self.main_pane, self.event_bus, self.image_data, self.metadata_data,
+                                    self.style_data, self.config)
+        self.main_pane.add(self.right_pane)
 
         self.image_content = ImageWidget(self.left_pane, self.root, self.event_bus, self.image_data, self.metadata_data,
-                                         self.style_data)
+                                         self.style_data, self.right_pane)
         self.left_pane.add(self.image_content)
 
         self.metadata_content = MetadataWidget(self.left_pane, self.event_bus, self.image_data, self.metadata_data,
                                                self.style_data)
         self.left_pane.add(self.metadata_content)
 
-        self.right_pane = MapWidget(self.main_pane, self.event_bus, self.image_data, self.metadata_data,
-                                    self.style_data, self.config)
-        self.main_pane.add(self.right_pane)
 
         self.main_pane.bind("<Double-Button-1>", self.reset_main_split)
         self.left_pane.bind("<Double-Button-1>", self.reset_left_split)
@@ -71,6 +71,7 @@ class ExifEditorApp:
                                 self.reset_window,
                                 self.image_content.open_file_dialog,
                                 self.image_content.close_image,
+                                self.right_pane.add_marker_center_of_map,
                                 self.image_content.next_image,
                                 self.image_content.prev_image,
                                 self.metadata_content.reset_all,

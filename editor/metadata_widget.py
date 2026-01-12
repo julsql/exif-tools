@@ -1,7 +1,7 @@
 import os
 import re
 import tkinter as tk
-from datetime import datetime, datetime_CAPI
+from datetime import datetime
 from tkinter import ttk
 
 import piexif

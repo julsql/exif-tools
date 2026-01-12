@@ -120,7 +120,6 @@ class MapWidget(tk.Frame):
             return
 
         self.add_marker_event(coords)
-
         return "break"
 
     def add_marker_event(self, coords, origin=False):
@@ -143,3 +142,8 @@ class MapWidget(tk.Frame):
             self.new_marker = self.map.set_marker(*coords,
                                                   text="Nouvelle",
                                                   icon=self.blue_icon)
+
+    def add_marker_center_of_map(self, event=None):
+        """Place un marqueur au centre de la carte visible."""
+        coords = self.map.get_position()
+        self.add_marker_event(coords, False)
