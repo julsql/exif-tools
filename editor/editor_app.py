@@ -1,7 +1,7 @@
 import os
 import tkinter as tk
-from tkinter import PhotoImage
 
+from PIL import Image, ImageTk
 from tkinterdnd2 import DND_FILES
 
 from editor import resource_path
@@ -29,7 +29,9 @@ class ExifEditorApp:
 
         self.root.configure(bg=self.style_data.BG_COLOR)
 
-        icon = PhotoImage(file=resource_path("assets/icon.png"))
+        icon_path = resource_path("assets/icon.png")
+        img = Image.open(icon_path)
+        icon = ImageTk.PhotoImage(img)
         root.iconphoto(True, icon)
 
         self.config = ConfigManager()

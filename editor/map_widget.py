@@ -1,6 +1,7 @@
 import tkinter as tk
 
 import tkintermapview
+from PIL import Image, ImageTk
 
 from editor import resource_path
 from editor.config_manager import ConfigManager
@@ -27,8 +28,8 @@ class MapWidget(tk.Frame):
         position = self.config.get('position', self.COORDINATES_PARIS)
         zoom = self.config.get('zoom', self.DEFAULT_ZOOM)
 
-        self.red_icon = tk.PhotoImage(file=resource_path("assets/marker-red.png"))
-        self.blue_icon = tk.PhotoImage(file=resource_path("assets/marker-blue.png"))
+        self.red_icon = self.load_icon("assets/marker-red.png")
+        self.blue_icon = self.load_icon("assets/marker-blue.png")
 
         self.map = tkintermapview.TkinterMapView(self, width=800, height=600)
 
@@ -45,6 +46,12 @@ class MapWidget(tk.Frame):
         self.map.canvas.bind("<Button-2>", self._on_right_click)
 
         self.event_bus.subscribe("metadata_updated", self.update_origin)
+
+    def load_icon(self, filename, size=None):
+        img = Image.open(resource_path(filename))
+        if size:
+            img = img.resize(size, Image.LANCZOS)
+        return ImageTk.PhotoImage(img)
 
     def set_map_tiles(self):
         map_tiles = self.config.get('map', self.style_data.DEFAULT_MAP)
