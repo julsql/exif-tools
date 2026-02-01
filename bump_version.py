@@ -53,6 +53,11 @@ def main():
         r'VERSION="[\d\.]+"',
         f'VERSION="{version}"'
     )
+    update_file(
+        'scripts/install-mac.sh',
+        r'VERSION="[\d\.]+"',
+        f'VERSION="{version}"'
+    )
 
 
 if __name__ == '__main__':
