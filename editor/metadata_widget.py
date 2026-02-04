@@ -1,14 +1,18 @@
 import os
 import re
+import threading
 import tkinter as tk
 from datetime import datetime
-from tkinter import ttk
+from tkinter import ttk, messagebox
+from typing import Any
 
 import piexif
 
+from detect_specie.main import find_specie
 from editor import resource_path
 from editor.image_widget import load_icon
 from editor.shared_data import ImageData, StyleData, MetadataData
+from editor.utils import has_specie, get_name
 
 
 class MetadataWidget(tk.Frame):
@@ -226,8 +230,20 @@ class MetadataWidget(tk.Frame):
             data = self.get_data()
             if data:
                 self._populate_entries(data)
+            if not has_specie(self.image_data.image_path):
+                threading.Thread(target=self.get_specie, args=(data,)).start()
         elif publisher == "close":
             self._clear_all_entries()
+
+    def get_specie(self, data):
+        latitude, longitude = get_coordinates(self.image_data.pil_image)
+        specie = find_specie(self.image_data.image_path, latitude, longitude)
+        if specie:
+            update_name = messagebox.askokcancel("Espèce détectée",
+                                                 f"L'espèce {specie} a été reconnue.\nSi vous confirmez, cela va automatiquement ajouter l'espèce dans le nom du fichier.")
+            if update_name:
+                new_name = f"{specie} {data[0]['value']}"
+                self._update_entry(0, data[0]['key'], new_name)
 
     def _populate_entries(self, data):
         for i, label_data in enumerate(data):
@@ -253,7 +269,6 @@ class MetadataWidget(tk.Frame):
 
             if self.LABELS[index]["disable"]:
                 entry.config(state="readonly")
-
 
 def get_date_taken(image, exif_date_format, displayed_date_format):
     try:
@@ -291,10 +306,6 @@ def get_weight(path):
     poids_image = os.path.getsize(path)
     poids_image_ko = (poids_image / 1024)
     return f"{poids_image_ko:.2f} Ko"
-
-
-def get_name(path):
-    return ".".join(path.split("/")[-1].split(".")[:-1])
 
 
 def get_device(image):

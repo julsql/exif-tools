@@ -13,7 +13,6 @@ from editor.menu import MenuBar
 from editor.metadata_widget import MetadataWidget
 from editor.shared_data import ImageData, StyleData, MetadataData
 
-
 class ExifEditorApp:
     DEFAULT_HEIGHT = 800
     DEFAULT_WIDTH = 1200

@@ -80,7 +80,6 @@ class MenuBar:
 
     def switch_map(self):
         old_map_tiles = self.config.get('map', self.style_data.DEFAULT_MAP)
-        print(old_map_tiles)
         if old_map_tiles == "french":
             self.config.set("map", "international")
         else:

@@ -1,12 +1,16 @@
+import threading
 import tkinter as tk
+from tkinter import messagebox
 
 import tkintermapview
 from PIL import Image, ImageTk
 
+from detect_specie.main import find_specie
 from editor import resource_path
 from editor.config_manager import ConfigManager
 from editor.metadata_widget import get_coordinates
 from editor.shared_data import MetadataData, StyleData, ImageData
+from editor.utils import has_specie
 
 
 class MapWidget(tk.Frame):
@@ -146,6 +150,10 @@ class MapWidget(tk.Frame):
             self.metadata_data.entries["longitude"].delete(0, tk.END)
             self.metadata_data.entries["longitude"].insert(0, coords[1])
 
+
+            if not has_specie(self.image_data.image_path):
+                threading.Thread(target=self.get_specie, args=(coords[0], coords[1])).start()
+
             self.new_marker = self.map.set_marker(*coords,
                                                   text="Nouvelle",
                                                   icon=self.blue_icon)
@@ -154,3 +162,16 @@ class MapWidget(tk.Frame):
         """Place un marqueur au centre de la carte visible."""
         coords = self.map.get_position()
         self.add_marker_event(coords, False)
+
+    def get_specie(self, lat, lon):
+        specie = find_specie(self.image_data.image_path, lat, lon)
+        if specie:
+            update_name = messagebox.askokcancel("Espèce détectée",
+                                                 f"L'espèce {specie} a été reconnue.\nSi vous confirmez, cela va automatiquement ajouter l'espèce dans le nom du fichier.")
+            if update_name:
+                entry = self.metadata_data.entries['nom']
+                new_name = f"{specie} {entry.get()}"
+                entry.config(state="normal")
+                entry.delete(0, tk.END)
+                entry.insert(0, new_name)
+                entry.config(state="readonly")

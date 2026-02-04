@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import tkinter as tk
 from datetime import datetime
@@ -60,10 +61,12 @@ class ImageWidget(tk.Frame):
         self.prev_icon = load_icon(os.path.join(assets_path, style_data.MODE, "arrow_left.png"), icon_height)
         self.next_icon = load_icon(os.path.join(assets_path, style_data.MODE, "arrow_right.png"), icon_height)
 
-        self.icon_label1 = tk.Label(self.top_frame, image=self.save_icon, bg=style_data.BG_TAB_COLOR, cursor=style_data.SELECT_CURSOR)
+        self.icon_label1 = tk.Label(self.top_frame, image=self.save_icon, bg=style_data.BG_TAB_COLOR,
+                                    cursor=style_data.SELECT_CURSOR)
         self.icon_label1.grid(row=0, column=0, padx=icon_padding)
 
-        self.icon_label2 = tk.Label(self.top_frame, image=self.save_as_icon, bg=style_data.BG_TAB_COLOR, cursor=style_data.SELECT_CURSOR)
+        self.icon_label2 = tk.Label(self.top_frame, image=self.save_as_icon, bg=style_data.BG_TAB_COLOR,
+                                    cursor=style_data.SELECT_CURSOR)
         self.icon_label2.grid(row=0, column=1, padx=icon_padding)
 
         self.icon_label3 = tk.Label(self.top_frame, image=self.add_photo_icon, bg=style_data.BG_TAB_COLOR,
@@ -74,7 +77,8 @@ class ImageWidget(tk.Frame):
                                     cursor=style_data.SELECT_CURSOR)
         self.icon_label4.grid(row=0, column=2, padx=icon_padding)
 
-        self.icon_label5 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.BG_TAB_COLOR, cursor=style_data.SELECT_CURSOR)
+        self.icon_label5 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.BG_TAB_COLOR,
+                                    cursor=style_data.SELECT_CURSOR)
         self.icon_label5.grid(row=0, column=3, padx=icon_padding, sticky="e")
 
         # Zone d'affichage de l'image
@@ -84,10 +88,12 @@ class ImageWidget(tk.Frame):
         nav_frame = tk.Frame(self, bg=self.style_data.BG_COLOR)
         nav_frame.grid(row=3, column=0, pady=8)
 
-        self.prev_btn = tk.Label(nav_frame, image=self.prev_icon, bg=self.style_data.BG_COLOR, cursor=style_data.SELECT_CURSOR)
+        self.prev_btn = tk.Label(nav_frame, image=self.prev_icon, bg=self.style_data.BG_COLOR,
+                                 cursor=style_data.SELECT_CURSOR)
         self.prev_btn.pack(side="left", padx=20)
 
-        self.next_btn = tk.Label(nav_frame, image=self.next_icon, bg=self.style_data.BG_COLOR, cursor=style_data.SELECT_CURSOR)
+        self.next_btn = tk.Label(nav_frame, image=self.next_icon, bg=self.style_data.BG_COLOR,
+                                 cursor=style_data.SELECT_CURSOR)
         self.next_btn.pack(side="right", padx=20)
 
         self.image_area_place_config = {
@@ -135,11 +141,13 @@ class ImageWidget(tk.Frame):
             return
 
         # Récupérer les valeurs des champs
+        name_str = self.metadata_data.entries["nom"].get()
         date_str = self.metadata_data.entries["date_creation"].get()
         latitude_str = self.metadata_data.entries["latitude"].get()
         longitude_str = self.metadata_data.entries["longitude"].get()
 
         # Valider les données
+        name = self._parse_name(name_str)
         date = self._parse_date(date_str)
         latitude = self._parse_coordinate(latitude_str)
         longitude = self._parse_coordinate(longitude_str)
@@ -147,12 +155,25 @@ class ImageWidget(tk.Frame):
         # Mettre à jour les métadonnées EXIF
         try:
             exif_bytes = self._update_exif_metadata(image, date, latitude, longitude)
-        except Exception as e:
+        except Exception:
             ToastNotification(self.root, self.style_data, "Problème avec la sauvegarde")
             return False
-        if new_path:
-            path = new_path
+
         piexif.insert(exif_bytes, path)
+
+        if new_path:
+            final_path = new_path
+        elif name:
+            ext = os.path.splitext(path)[1]
+            safe_name = "".join(c for c in name if c.isalnum() or c in (" ", "_", "-")).rstrip()
+            final_path = os.path.join(os.path.dirname(path), f"{safe_name}{ext}")
+        else:
+            final_path = path
+
+        if final_path != path:
+            os.rename(path, final_path)
+            self.image_list[self.current_index] = final_path
+            self.image_data.image_path = final_path
 
         ToastNotification(self.root, self.style_data, "Image sauvegardée avec succès")
         return True
@@ -179,6 +200,9 @@ class ImageWidget(tk.Frame):
             is_saved = self.save_data()
         if is_saved:
             self.load_image()
+
+    def _parse_name(self, name):
+        return re.sub(r'[\\/:"*?<>|]', "_", name)
 
     def _parse_date(self, date_str):
         for fmt in self.style_data.ACCEPTED_DATE_FORMATS:
