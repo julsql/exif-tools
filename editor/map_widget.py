@@ -50,6 +50,7 @@ class MapWidget(tk.Frame):
         self.map.canvas.bind("<Button-2>", self._on_right_click)
 
         self.event_bus.subscribe("metadata_updated", self.update_origin)
+        self.event_bus.subscribe("metadata_saved", self.saved)
 
     def load_icon(self, filename, size=None):
         img = Image.open(resource_path(filename))
@@ -88,6 +89,10 @@ class MapWidget(tk.Frame):
             self.after_cancel(self._origin_after_id)
 
         self._origin_after_id = self.after(50, lambda: self._update_origin(publisher))
+
+    def saved(self, data):
+        if len(data) == 2:
+            self.map.set_position(*data)
 
     def _update_origin(self, publisher):
         """Met à jour les marqueurs selon l'événement reçu."""
@@ -149,7 +154,6 @@ class MapWidget(tk.Frame):
             self.metadata_data.entries["latitude"].insert(0, coords[0])
             self.metadata_data.entries["longitude"].delete(0, tk.END)
             self.metadata_data.entries["longitude"].insert(0, coords[1])
-
 
             if not has_specie(self.image_data.image_path):
                 threading.Thread(target=self.get_specie, args=(coords[0], coords[1])).start()

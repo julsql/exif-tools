@@ -175,6 +175,9 @@ class ImageWidget(tk.Frame):
             self.image_list[self.current_index] = final_path
             self.image_data.image_path = final_path
 
+        if latitude and longitude:
+            self.event_bus.publish("metadata_saved", (latitude, longitude))
+
         ToastNotification(self.root, self.style_data, "Image sauvegardée avec succès")
         return True
 
