@@ -15,6 +15,10 @@ EXEC_DEST_PATH="$APP_DIR/ExifTools"
 ICON_SRC_PATH="https://raw.githubusercontent.com/julsql/exif-tools/$VERSION/assets/icon.png"
 ICON_DEST_PATH="$HOME/.local/share/icons/exiftools.png"
 DESKTOP_FILE="$HOME/.local/share/applications/exiftools.desktop"
+MODEL_DIR="$APP_DIR/models"
+MODEL_NAME="vit_reg4_m16_rms_avg_i-jepa-inat21.pt"
+MODEL_PATH="$MODEL_DIR/$MODEL_NAME"
+MODEL_URL="https://huggingface.co/birder-project/vit_reg4_m16_rms_avg_i-jepa-inat21/resolve/main/vit_reg4_m16_rms_avg_i-jepa-inat21.pt?download=true"
 
 echo "🔄 Mise à jour des paquets..."
 sudo apt update
@@ -63,8 +67,17 @@ deactivate
 # === Création des dossiers ===
 echo "📁 Création des dossiers nécessaires..."
 mkdir -p "$APP_DIR"
+mkdir -p "$MODEL_DIR"
 mkdir -p "$HOME/.local/share/icons"
 mkdir -p "$HOME/.local/share/applications"
+
+# === Téléchargement du modèle ===
+if [[ ! -f "$MODEL_PATH" ]]; then
+  echo "⬇️ Téléchargement du modèle iNaturalist (peut prendre du temps)..."
+  wget -O "$MODEL_PATH" "$MODEL_URL"
+else
+  echo "✅ Modèle déjà présent"
+fi
 
 # === Copie de l'exécutable ===
 echo "📄 Copie de l'exécutable vers $EXEC_DEST_PATH"

@@ -6,7 +6,8 @@ trap 'echo "❌ Une erreur est survenue. Installation interrompue."' ERR
 # === Config personnalisable ===
 APP_NAME="Éditeur Exif"
 
-VERSION="1.0.9"
+VERSION="1.2.0"
+APP_DIR="$HOME/.exiftools"
 
 PYTHON="/usr/local/bin/python3.9"
 APP_FOLDER="$PWD/exif-tools-$VERSION"
@@ -15,6 +16,10 @@ EXEC_SRC_PATH="$APP_FOLDER/dist/ExifTools.app"
 EXEC_DEST_PATH="/Applications/ExifTools.app"
 ICON_SRC_PATH="https://raw.githubusercontent.com/julsql/exif-tools/$VERSION/assets/icon.icns"
 ICON_DEST_PATH="$EXEC_DEST_PATH/Contents/Resources/icon-windowed.icns"
+MODEL_DIR="$APP_DIR/models"
+MODEL_NAME="vit_reg4_m16_rms_avg_i-jepa-inat21.pt"
+MODEL_PATH="$MODEL_DIR/$MODEL_NAME"
+MODEL_URL="https://huggingface.co/birder-project/vit_reg4_m16_rms_avg_i-jepa-inat21/resolve/main/vit_reg4_m16_rms_avg_i-jepa-inat21.pt?download=true"
 
 echo "📦 Installation de python3.9..."
 brew install python@3.9
@@ -47,6 +52,19 @@ pyinstaller --clean --onefile --windowed --name "ExifTools" --hidden-import=piex
 
 echo "🔚 Désactivation de l'environnement virtuel..."
 deactivate
+
+# === Création des dossiers ===
+echo "📁 Création des dossiers nécessaires..."
+mkdir -p "$APP_DIR"
+mkdir -p "$MODEL_DIR"
+
+# === Téléchargement du modèle ===
+if [[ ! -f "$MODEL_PATH" ]]; then
+  echo "⬇️ Téléchargement du modèle iNaturalist (peut prendre du temps)..."
+  wget -O "$MODEL_PATH" "$MODEL_URL"
+else
+  echo "✅ Modèle déjà présent"
+fi
 
 # === Copie de l'app ===
 echo "📄 Copie de l'app vers $EXEC_DEST_PATH"
