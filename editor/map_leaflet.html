@@ -1,0 +1,197 @@
+<!-- html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Carte</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { width: 100%; height: 100%; }
+    #error {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: #1e1e1e;
+      color: #f0f0f0;
+      font: 14px -apple-system, system-ui, Segoe UI, Arial;
+      padding: 20px;
+      text-align: center;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="error"></div>
+
+  <script>
+    const DEFAULT_LAT = 48.8566;
+    const DEFAULT_LON = 2.3522;
+    const DEFAULT_ZOOM = 5;
+
+    let bridge = null;
+    let map = null;
+    let tileLayer = null;
+
+    let originMarker = null;
+    let newMarker = null;
+
+    let redIcon = null;
+    let blueIcon = null;
+
+    let pickingEnabled = false;
+
+    function setPickingEnabled(enabled) {
+      pickingEnabled = !!enabled;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("error");
+      el.style.display = "flex";
+      el.textContent = msg;
+    }
+
+    function _makeIcon(url) {
+      return L.icon({
+        iconUrl: url,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowUrl: "https://unpkg.com/leaflet/dist/images/marker-shadow.png",
+        shadowSize: [41, 41]
+      });
+    }
+
+    function initMap(tileUrl, lat, lon, zoom, redIconUrl, blueIconUrl) {
+      if (typeof L === "undefined") {
+        showError(
+          "La carte n'a pas pu être affichée : Leaflet (local) n'est pas chargé.\n" +
+          "Vérifie que les fichiers existent :\n" +
+          "- assets/leaflet/leaflet.js\n" +
+          "- assets/leaflet/leaflet.css"
+        );
+        return;
+      }
+
+      map = L.map("map").setView([lat ?? DEFAULT_LAT, lon ?? DEFAULT_LON], zoom ?? DEFAULT_ZOOM);
+
+      tileLayer = L.tileLayer(tileUrl, { maxZoom: 19 });
+      tileLayer.addTo(map);
+
+      if (redIconUrl) redIcon = _makeIcon(redIconUrl);
+      if (blueIconUrl) blueIcon = _makeIcon(blueIconUrl);
+
+      function placeNewMarker(lat, lon) {
+        if (newMarker) map.removeLayer(newMarker);
+        const opts = blueIcon ? { icon: blueIcon } : {};
+        newMarker = L.marker([lat, lon], opts).addTo(map);
+      }
+
+      function handlePick(lat, lon) {
+        if (!pickingEnabled) return;
+        placeNewMarker(lat, lon);
+        if (bridge) bridge.onCoordsPicked(lat, lon);
+      }
+
+      map.on("click", function(e) {
+        handlePick(e.latlng.lat, e.latlng.lng);
+      });
+
+      map.on("contextmenu", function(e) {
+        handlePick(e.latlng.lat, e.latlng.lng);
+      });
+
+      function reportState() {
+        if (!bridge) return;
+        const c = map.getCenter();
+        bridge.onMapStateChanged(c.lat, c.lng, map.getZoom());
+      }
+
+      map.on("moveend", reportState);
+      map.on("zoomend", reportState);
+
+      reportState();
+    }
+
+    function setTileUrl(tileUrl) {
+      if (!map || !tileLayer || typeof L === "undefined") return;
+      map.removeLayer(tileLayer);
+      tileLayer = L.tileLayer(tileUrl, { maxZoom: 19 });
+      tileLayer.addTo(map);
+    }
+
+    function setView(lat, lon, zoom) {
+      if (!map || typeof L === "undefined") return;
+      map.setView([lat, lon], zoom);
+    }
+
+    function setOriginMarker(lat, lon) {
+      if (!map || typeof L === "undefined") return;
+      if (originMarker) map.removeLayer(originMarker);
+      const opts = redIcon ? { icon: redIcon } : {};
+      originMarker = L.marker([lat, lon], opts).addTo(map);
+    }
+
+    function clearMarkers() {
+      if (!map) return;
+      if (originMarker) { map.removeLayer(originMarker); originMarker = null; }
+      if (newMarker) { map.removeLayer(newMarker); newMarker = null; }
+    }
+
+    function clearNewMarker() {
+      if (!map) return;
+      if (newMarker) { map.removeLayer(newMarker); newMarker = null; }
+    }
+
+    function setNewMarker(lat, lon) {
+      if (!map || typeof L === "undefined") return;
+      if (newMarker) map.removeLayer(newMarker);
+      const opts = blueIcon ? { icon: blueIcon } : {};
+      newMarker = L.marker([lat, lon], opts).addTo(map);
+    }
+
+    function getCenter() {
+      if (!map) return null;
+      const c = map.getCenter();
+      return { lat: c.lat, lon: c.lng, zoom: map.getZoom() };
+    }
+
+    window.addEventListener("load", function() {
+      if (typeof QWebChannel === "undefined") {
+        initMap(
+          "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          DEFAULT_LAT,
+          DEFAULT_LON,
+          DEFAULT_ZOOM,
+          null,
+          null
+        );
+        return;
+      }
+
+      new QWebChannel(qt.webChannelTransport, function(channel) {
+        bridge = channel.objects.bridge;
+        bridge.getInitParams(function(params) {
+          initMap(
+            params.tileUrl,
+            params.lat,
+            params.lon,
+            params.zoom,
+            params.redIconUrl,
+            params.blueIconUrl
+          );
+        });
+      });
+    });
+  </script>
+</body>
+</html>

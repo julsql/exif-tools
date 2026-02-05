@@ -30,7 +30,7 @@ def main():
 
     # Modifier la popup
     update_file(
-        'editor/menu.py',
+        'editor/main_window.py',
         r'Version [\d\.]+',
         f'Version {version}'
     )
@@ -43,19 +43,25 @@ def main():
     )
 
     # Modifier les scripts
+    pattern = r'VERSION="[\d\.]+"'
+    update_file(
+        'scripts/install-86_64.sh',
+        pattern,
+        f'VERSION="{version}"'
+    )
     update_file(
         'scripts/install-all.sh',
-        r'VERSION="[\d\.]+"',
+        pattern,
         f'VERSION="{version}"'
     )
     update_file(
         'scripts/install-arm64.sh',
-        r'VERSION="[\d\.]+"',
+        pattern,
         f'VERSION="{version}"'
     )
     update_file(
         'scripts/install-mac.sh',
-        r'VERSION="[\d\.]+"',
+        pattern,
         f'VERSION="{version}"'
     )
 
