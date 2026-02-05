@@ -1,8 +1,9 @@
 import os
 import queue
 import tkinter as tk
-from tkinter import messagebox
+import webbrowser
 
+import requests
 from PIL import Image, ImageTk
 from tkinterdnd2 import DND_FILES
 
@@ -185,7 +186,8 @@ class ExifEditorApp:
 
     def get_specie(self, data):
         can_get_specie = self.config.get('recognition', self.style_data.DEFAULT_SPECIE)
-        if can_get_specie and not has_specie(self.metadata_data.entries['nom'].get()):
+        self.config.set("recognition", can_get_specie)
+        if self.image_data.image_open and can_get_specie and not has_specie(self.metadata_data.entries['nom'].get()):
             latitude, longitude = (self.metadata_data.entries['latitude'].get(),
                                    self.metadata_data.entries['longitude'].get())
 
@@ -215,24 +217,75 @@ class ExifEditorApp:
                 )
 
             elif event == "inference_done":
-                print("inference_done")
                 self.on_specie_detected(payload)
 
         self.root.after(200, self.check_model_queue)
 
     def on_specie_detected(self, specie):
         if specie:
-            update_name = messagebox.askokcancel("Espèce détectée",
-                                                 f"L'espèce {specie} a été reconnue.\nSi vous confirmez, cela va automatiquement ajouter l'espèce dans le nom du fichier.")
-            if update_name:
-                entry = self.metadata_data.entries['nom']
-                new_name = f"{specie} {entry.get()}"
-                entry.config(state="normal")
-                entry.delete(0, tk.END)
-                entry.insert(0, new_name)
-                entry.config(state="readonly")
+            url = get_inat_taxon_link(specie)
+            self.show_species_popup(specie, url)
+
+    def show_species_popup(self, specie, url):
+        # Nouvelle fenêtre
+        win = tk.Toplevel()
+        win.configure(bg="white")
+        win.title("Espèce détectée")
+        if url is None:
+            tk.Label(win, bg="white", fg="black", text=f"L'espèce {specie} a été reconnue.").pack(pady=10)
+        else:
+            # Message
+            tk.Label(win, bg="white", fg="black",
+                     text=f"L'espèce {specie} a été reconnue.\nCliquez sur le lien pour plus d'infos :").pack(pady=10)
+
+            # Lien cliquable
+            link = tk.Label(win, bg="white", text=url, fg="blue", cursor="hand2")
+            link.pack()
+            link.bind("<Button-1>", lambda e: webbrowser.open_new(url))
+
+        # Boutons OK / Annuler
+        def on_ok():
+            entry = self.metadata_data.entries['nom']
+            new_name = f"{specie} {entry.get()}"
+            entry.config(state="normal")
+            entry.delete(0, tk.END)
+            entry.insert(0, new_name)
+            entry.config(state="readonly")
+            win.destroy()
+
+        def on_cancel():
+            win.destroy()
+
+        btn_frame = tk.Frame(win, bg="white")
+        btn_frame.pack(pady=10)
+
+        btn_ok = tk.Label(btn_frame, bg="white", text="OK", fg="black", cursor="hand2")
+        btn_ok.pack(side=tk.LEFT, padx=5)
+        btn_ok.bind("<Button-1>", lambda e: on_ok())
+
+        btn_cancel = tk.Label(btn_frame, bg="white", text="Annuler", fg="black", cursor="hand2")
+        btn_cancel.pack(side=tk.LEFT, padx=5)
+        btn_cancel.bind("<Button-1>", lambda e: on_cancel())
 
 
 def has_specie(name):
     names = name.split(" ")
     return len(names) > 2 and names[0][0].isupper() and names[1][0].islower()
+
+
+def get_inat_taxon_id(scientific_name):
+    url = "https://api.inaturalist.org/v1/taxa"
+    params = {"q": scientific_name, "rank": "species"}
+    resp = requests.get(url, params=params)
+    resp.raise_for_status()
+    results = resp.json()["results"]
+    if results:
+        return results[0]["id"]
+    return None
+
+
+def get_inat_taxon_link(scientific_name):
+    taxon_id = get_inat_taxon_id(scientific_name)
+    if taxon_id:
+        return f"https://www.inaturalist.org/taxa/{taxon_id}"
+    return None
