@@ -102,7 +102,8 @@ class MetadataWidget(tk.Frame):
 
         self.grid_columnconfigure(1, weight=1)
 
-        self.event_bus.subscribe("metadata_updated", self.update_metadata)
+        self.event_bus.subscribe("image_open", self.image_open)
+        self.event_bus.subscribe("image_close", self.image_close)
 
     def on_focus_in(self, event):
         """Changement de bordure quand l'entry reçoit le focus."""
@@ -223,17 +224,20 @@ class MetadataWidget(tk.Frame):
             ]
         return None
 
-    def update_metadata(self, publisher):
+    def image_open(self, event):
         self.errorLabel.configure(text=self.DEFAULT_MESSAGE)
         self.errorLabel.config(fg=self.style_data.FONT_COLOR)
-        if publisher == "open":
-            data = self.get_data()
-            if data:
-                self._populate_entries(data)
-            if not has_specie(self.image_data.image_path):
-                threading.Thread(target=self.get_specie, args=(data,)).start()
-        elif publisher == "close":
-            self._clear_all_entries()
+        data = self.get_data()
+        if data:
+            self._populate_entries(data)
+        if not has_specie(self.image_data.image_path):
+            threading.Thread(target=self.get_specie, args=(data,)).start()
+        self.event_bus.publish("metadata_loaded")
+
+    def image_close(self, event):
+        self.errorLabel.configure(text=self.DEFAULT_MESSAGE)
+        self.errorLabel.config(fg=self.style_data.FONT_COLOR)
+        self._clear_all_entries()
 
     def get_specie(self, data):
         latitude, longitude = get_coordinates(self.image_data.pil_image)

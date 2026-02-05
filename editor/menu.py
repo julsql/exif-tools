@@ -84,7 +84,7 @@ class MenuBar:
             self.config.set("map", "international")
         else:
             self.config.set("map", "french")
-        self.event_bus.publish("metadata_updated", "update-map")
+        self.event_bus.publish("map_updated")
 
         label = self.style_data.MAPS_SWITCH_LABEL[old_map_tiles]
         self.outils_menu.entryconfig(2, label=label)

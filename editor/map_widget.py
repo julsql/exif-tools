@@ -49,8 +49,11 @@ class MapWidget(tk.Frame):
         self.map.canvas.bind("<Button-3>", self._on_right_click)
         self.map.canvas.bind("<Button-2>", self._on_right_click)
 
-        self.event_bus.subscribe("metadata_updated", self.update_origin)
-        self.event_bus.subscribe("metadata_saved", self.saved)
+        self.event_bus.subscribe("metadata_loaded", self.metadata_loaded)
+        self.event_bus.subscribe("image_close", self.image_close)
+        self.event_bus.subscribe("image_save", self.image_save)
+        self.event_bus.subscribe("metadata_updated", self.metadata_updated)
+        self.event_bus.subscribe("map_updated", self.map_updated)
 
     def load_icon(self, filename, size=None):
         img = Image.open(resource_path(filename))
@@ -83,32 +86,23 @@ class MapWidget(tk.Frame):
                 pass
             self.new_marker = None
 
-    def update_origin(self, publisher):
-        """Évite le spam"""
-        if self._origin_after_id:
-            self.after_cancel(self._origin_after_id)
+    def metadata_loaded(self, event):
+        coords = self.get_coordinates()
+        self.add_origin_marker_event(coords)
 
-        self._origin_after_id = self.after(50, lambda: self._update_origin(publisher))
+    def image_close(self, event):
+        self.delete_markers()
 
-    def saved(self, data):
+    def image_save(self, data):
         if len(data) == 2:
             self.map.set_position(*data)
 
-    def _update_origin(self, publisher):
-        """Met à jour les marqueurs selon l'événement reçu."""
-        if publisher == "open":
-            coords = self.get_coordinates()
-            self.add_origin_marker_event(coords)
+    def metadata_updated(self, event):
+        coords = self.get_coordinates()
+        self.add_marker_event(coords, coords == get_coordinates(self.image_data.pil_image))
 
-        elif publisher == "close":
-            self.delete_markers()
-
-        elif publisher == "edit":
-            coords = self.get_coordinates()
-            self.add_marker_event(coords, coords == get_coordinates(self.image_data.pil_image))
-
-        elif publisher == "update-map":
-            self.set_map_tiles()
+    def map_updated(self, event):
+        self.set_map_tiles()
 
     def get_coordinates(self):
         """Récupère les coordonnées à partir des champs de métadonnées."""

@@ -13,6 +13,7 @@ from editor.menu import MenuBar
 from editor.metadata_widget import MetadataWidget
 from editor.shared_data import ImageData, StyleData, MetadataData
 
+
 class ExifEditorApp:
     DEFAULT_HEIGHT = 800
     DEFAULT_WIDTH = 1200
@@ -64,7 +65,6 @@ class ExifEditorApp:
                                                self.style_data)
         self.left_pane.add(self.metadata_content)
 
-
         self.main_pane.bind("<Double-Button-1>", self.reset_main_split)
         self.left_pane.bind("<Double-Button-1>", self.reset_left_split)
 
@@ -90,17 +90,18 @@ class ExifEditorApp:
 
         self.root.bind_all("<Button-1>", self.clear_focus, add="+")
 
-        self.event_bus.subscribe("metadata_updated", self.update)
+        self.event_bus.subscribe("image_open", self.image_open)
+        self.event_bus.subscribe("image_close", self.image_close)
 
         root.after(100, self.restore_split)
         root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-    def update(self, publisher):
-        if publisher == "open":
-            basename = os.path.basename(self.image_data.image_path)
-            self.root.title(basename)
-        elif publisher == "close":
-            self.root.title(self.DEFAULT_APP_TITLE)
+    def image_open(self, event):
+        basename = os.path.basename(self.image_data.image_path)
+        self.root.title(basename)
+
+    def image_close(self, event):
+        self.root.title(self.DEFAULT_APP_TITLE)
 
     def reset_main_split(self, event):
         self.main_pane.sash_place(0, self.vertical_default_ratio(), 0)
@@ -131,7 +132,6 @@ class ExifEditorApp:
         self.config.set("position", MapWidget.COORDINATES_PARIS)
         self.config.set("zoom", MapWidget.DEFAULT_ZOOM)
         self.config.save()
-
 
     def restore_split(self):
         main_x = self.config.get("main_split", self.vertical_default_ratio(self.DEFAULT_WIDTH))

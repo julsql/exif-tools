@@ -176,7 +176,7 @@ class ImageWidget(tk.Frame):
             self.image_data.image_path = final_path
 
         if latitude and longitude:
-            self.event_bus.publish("metadata_saved", (latitude, longitude))
+            self.event_bus.publish("image_save", (latitude, longitude))
 
         ToastNotification(self.root, self.style_data, "Image sauvegardée avec succès")
         return True
@@ -335,7 +335,7 @@ class ImageWidget(tk.Frame):
         self.image_data.image_open = False
 
         self.hide_image()
-        self.event_bus.publish("metadata_updated", "close")
+        self.event_bus.publish("image_close")
 
     def drag_and_drop(self, event):
         file_path = event.data.strip('{}')
@@ -450,7 +450,7 @@ class ImageWidget(tk.Frame):
             self.image_data.pil_image = image
             self.image_data.image_open = True
             self.reset_image()
-            self.event_bus.publish("metadata_updated", "open")
+            self.event_bus.publish("image_open")
         except Exception as e:
             print(f"Erreur lors du chargement de l'image : {e}")
 
