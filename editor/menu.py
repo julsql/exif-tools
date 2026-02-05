@@ -1,9 +1,12 @@
 import platform
+import threading
 import tkinter as tk
 from tkinter import messagebox
 
+from detect_specie.main import find_specie
 from editor.config_manager import ConfigManager
 from editor.event_bus import EventBus
+from editor.metadata_widget import get_coordinates
 from editor.shared_data import StyleData
 
 
@@ -26,12 +29,11 @@ class MenuBar:
         outils_menu.add_command(label="Réinitialiser les valeurs", command=reset_values,
                                 accelerator=self._format_accel("Shift+R"))
 
-        if self.config.get('map', self.style_data.DEFAULT_MAP) == self.style_data.DEFAULT_MAP:
-            switch_map_label = "Utiliser une carte internationale"
-        else:
-            switch_map_label = "Utiliser une carte française"
+        switch_map_label = self.style_data.MAPS_SWITCH_LABEL[self.config.get('map', self.style_data.DEFAULT_MAP)]
+        switch_specie_recognition = self.style_data.SPECIE_SWITCH_LABEL[self.config.get('recognition', self.style_data.DEFAULT_SPECIE)]
 
         outils_menu.add_command(label=switch_map_label, command=self.switch_map)
+        outils_menu.add_command(label=switch_specie_recognition, command=self.switch_specie_recognition)
         self.outils_menu = outils_menu
         menu_bar.add_cascade(label="Fenêtre", menu=outils_menu)
 
@@ -88,3 +90,14 @@ class MenuBar:
 
         label = self.style_data.MAPS_SWITCH_LABEL[old_map_tiles]
         self.outils_menu.entryconfig(2, label=label)
+
+    def switch_specie_recognition(self):
+        recognition_activate = self.config.get('recognition', self.style_data.DEFAULT_SPECIE)
+        if recognition_activate:
+            self.config.set("recognition", False)
+        else:
+            self.config.set("recognition", True)
+
+        label = self.style_data.SPECIE_SWITCH_LABEL[not recognition_activate]
+        self.outils_menu.entryconfig(3, label=label)
+        threading.Thread(target=self.event_bus.publish, args=("specie_recognition",)).start()

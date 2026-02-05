@@ -5,7 +5,7 @@ import os
 class ConfigManager:
     def __init__(self):
         home = os.path.expanduser("~")
-        self.path = os.path.join(home, ".exiftools", "window_config.json")
+        self.path = os.path.join(home, ".exiftools", "config.json")
         self.config = {}
         self.create_folder()
 

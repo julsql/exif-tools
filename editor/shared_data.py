@@ -37,11 +37,17 @@ class StyleData:
     TITLE_FONT = ("Segoe UI", 18, "bold")
     SELECT_CURSOR = "hand2"
     DEFAULT_MAP = "french"
+    DEFAULT_SPECIE = True
     MAPS = {"french": "https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
             "international": "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"}
     MAPS_SWITCH_LABEL = {
         "french": "Utiliser une carte française",
         "international": "Utiliser une carte internationale"
+    }
+
+    SPECIE_SWITCH_LABEL = {
+        True: "Désactiver la reconnaissance d'espèce",
+        False: "Activer la reconnaissance d'espèce"
     }
 
     def __init__(self):

@@ -1,16 +1,18 @@
 import os
 import tkinter as tk
+from tkinter import messagebox
 
 from PIL import Image, ImageTk
 from tkinterdnd2 import DND_FILES
 
+from detect_specie.main import find_specie
 from editor import resource_path
 from editor.config_manager import ConfigManager
 from editor.event_bus import EventBus
 from editor.image_widget import ImageWidget
 from editor.map_widget import MapWidget
 from editor.menu import MenuBar
-from editor.metadata_widget import MetadataWidget
+from editor.metadata_widget import MetadataWidget, get_coordinates
 from editor.shared_data import ImageData, StyleData, MetadataData
 
 
@@ -62,7 +64,7 @@ class ExifEditorApp:
         self.left_pane.add(self.image_content)
 
         self.metadata_content = MetadataWidget(self.left_pane, self.event_bus, self.image_data, self.metadata_data,
-                                               self.style_data)
+                                               self.style_data, self.config)
         self.left_pane.add(self.metadata_content)
 
         self.main_pane.bind("<Double-Button-1>", self.reset_main_split)
@@ -92,6 +94,7 @@ class ExifEditorApp:
 
         self.event_bus.subscribe("image_open", self.image_open)
         self.event_bus.subscribe("image_close", self.image_close)
+        self.event_bus.subscribe("specie_recognition", self.get_specie)
 
         root.after(100, self.restore_split)
         root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -163,3 +166,24 @@ class ExifEditorApp:
         if total_height is None:
             total_height = self.left_pane.winfo_height()
         return total_height // 2
+
+    def get_specie(self, data):
+        can_get_specie = self.config.get('recognition', self.style_data.DEFAULT_SPECIE)
+        if can_get_specie and not has_specie(self.metadata_data.entries['nom'].get()):
+            latitude, longitude = (self.metadata_data.entries['latitude'].get(), self.metadata_data.entries['longitude'].get())
+
+            specie = find_specie(self.image_data.image_path, latitude, longitude)
+            if specie:
+                update_name = messagebox.askokcancel("Espèce détectée",
+                                                     f"L'espèce {specie} a été reconnue.\nSi vous confirmez, cela va automatiquement ajouter l'espèce dans le nom du fichier.")
+                if update_name:
+                    entry = self.metadata_data.entries['nom']
+                    new_name = f"{specie} {entry.get()}"
+                    entry.config(state="normal")
+                    entry.delete(0, tk.END)
+                    entry.insert(0, new_name)
+                    entry.config(state="readonly")
+
+def has_specie(name):
+    names = name.split(" ")
+    return len(names) > 2 and names[0][0].isupper() and names[1][0].islower()

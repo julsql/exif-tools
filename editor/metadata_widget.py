@@ -3,16 +3,14 @@ import re
 import threading
 import tkinter as tk
 from datetime import datetime
-from tkinter import ttk, messagebox
-from typing import Any
+from tkinter import ttk
 
 import piexif
 
-from detect_specie.main import find_specie
 from editor import resource_path
+from editor.config_manager import ConfigManager
 from editor.image_widget import load_icon
 from editor.shared_data import ImageData, StyleData, MetadataData
-from editor.utils import has_specie, get_name
 
 
 class MetadataWidget(tk.Frame):
@@ -29,7 +27,7 @@ class MetadataWidget(tk.Frame):
               {"key": "longitude", "title": "Longitude", "disable": False},
               ]
 
-    def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData):
+    def __init__(self, parent, event_bus, image_data: ImageData, metadata_data: MetadataData, style_data: StyleData, config: ConfigManager):
         button_event = "<Button-1>"
         focus_out_event = "<FocusOut>"
         enter_event = "<Return>"
@@ -40,6 +38,7 @@ class MetadataWidget(tk.Frame):
         self.image_data = image_data
         self.metadata_data = metadata_data
         self.style_data = style_data
+        self.config = config
 
         self.configure(bg=style_data.BG_COLOR)
 
@@ -230,24 +229,14 @@ class MetadataWidget(tk.Frame):
         data = self.get_data()
         if data:
             self._populate_entries(data)
-        if not has_specie(self.image_data.image_path):
-            threading.Thread(target=self.get_specie, args=(data,)).start()
+
+        threading.Thread(target=self.event_bus.publish, args=("specie_recognition",)).start()
         self.event_bus.publish("metadata_loaded")
 
     def image_close(self, event):
         self.errorLabel.configure(text=self.DEFAULT_MESSAGE)
         self.errorLabel.config(fg=self.style_data.FONT_COLOR)
         self._clear_all_entries()
-
-    def get_specie(self, data):
-        latitude, longitude = get_coordinates(self.image_data.pil_image)
-        specie = find_specie(self.image_data.image_path, latitude, longitude)
-        if specie:
-            update_name = messagebox.askokcancel("Espèce détectée",
-                                                 f"L'espèce {specie} a été reconnue.\nSi vous confirmez, cela va automatiquement ajouter l'espèce dans le nom du fichier.")
-            if update_name:
-                new_name = f"{specie} {data[0]['value']}"
-                self._update_entry(0, data[0]['key'], new_name)
 
     def _populate_entries(self, data):
         for i, label_data in enumerate(data):
@@ -273,6 +262,9 @@ class MetadataWidget(tk.Frame):
 
             if self.LABELS[index]["disable"]:
                 entry.config(state="readonly")
+
+def get_name(path):
+    return ".".join(path.split("/")[-1].split(".")[:-1])
 
 def get_date_taken(image, exif_date_format, displayed_date_format):
     try:
