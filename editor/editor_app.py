@@ -1,18 +1,21 @@
 import os
+import queue
 import tkinter as tk
 from tkinter import messagebox
 
 from PIL import Image, ImageTk
 from tkinterdnd2 import DND_FILES
 
-from detect_specie.main import find_specie
+from detect_specie.inference_worker import InferenceWorker
 from editor import resource_path
 from editor.config_manager import ConfigManager
 from editor.event_bus import EventBus
 from editor.image_widget import ImageWidget
 from editor.map_widget import MapWidget
 from editor.menu import MenuBar
-from editor.metadata_widget import MetadataWidget, get_coordinates
+from editor.metadata_widget import MetadataWidget
+from detect_specie.model_loader import ModelLoaderThread
+from detect_specie.model_service import ModelService
 from editor.shared_data import ImageData, StyleData, MetadataData
 
 
@@ -99,6 +102,18 @@ class ExifEditorApp:
         root.after(100, self.restore_split)
         root.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        self.model_queue = queue.Queue()
+        self.model_service = ModelService()
+        self.class_mapping = None
+        self.transform = None
+
+        # Lancer le chargement du modèle
+        loader = ModelLoaderThread(self.model_service, self.model_queue)
+        loader.start()
+
+        # Démarrer l’écoute
+        self.root.after(200, self.check_model_queue)
+
     def image_open(self, event):
         basename = os.path.basename(self.image_data.image_path)
         self.root.title(basename)
@@ -170,19 +185,52 @@ class ExifEditorApp:
     def get_specie(self, data):
         can_get_specie = self.config.get('recognition', self.style_data.DEFAULT_SPECIE)
         if can_get_specie and not has_specie(self.metadata_data.entries['nom'].get()):
-            latitude, longitude = (self.metadata_data.entries['latitude'].get(), self.metadata_data.entries['longitude'].get())
+            latitude, longitude = (self.metadata_data.entries['latitude'].get(),
+                                   self.metadata_data.entries['longitude'].get())
 
-            specie = find_specie(self.image_data.image_path, latitude, longitude)
-            if specie:
-                update_name = messagebox.askokcancel("Espèce détectée",
-                                                     f"L'espèce {specie} a été reconnue.\nSi vous confirmez, cela va automatiquement ajouter l'espèce dans le nom du fichier.")
-                if update_name:
-                    entry = self.metadata_data.entries['nom']
-                    new_name = f"{specie} {entry.get()}"
-                    entry.config(state="normal")
-                    entry.delete(0, tk.END)
-                    entry.insert(0, new_name)
-                    entry.config(state="readonly")
+            worker = InferenceWorker(
+                self.model_service,
+                self.image_data.image_path,
+                latitude,
+                longitude,
+                self.model_queue,
+                self.class_mapping,
+                self.transform
+            )
+            worker.start()
+
+    def check_model_queue(self):
+        while not self.model_queue.empty():
+            event, payload = self.model_queue.get()
+
+            if event == "model_ready":
+                import birder
+
+                self.class_mapping = {v: k for k, v in self.model_service.model_info.class_to_idx.items()}
+
+                size = birder.get_size_from_signature(self.model_service.model_info.signature)
+                self.transform = birder.classification_transform(
+                    size, self.model_service.model_info.rgb_stats
+                )
+
+            elif event == "inference_done":
+                print("inference_done")
+                self.on_specie_detected(payload)
+
+        self.root.after(200, self.check_model_queue)
+
+    def on_specie_detected(self, specie):
+        if specie:
+            update_name = messagebox.askokcancel("Espèce détectée",
+                                                 f"L'espèce {specie} a été reconnue.\nSi vous confirmez, cela va automatiquement ajouter l'espèce dans le nom du fichier.")
+            if update_name:
+                entry = self.metadata_data.entries['nom']
+                new_name = f"{specie} {entry.get()}"
+                entry.config(state="normal")
+                entry.delete(0, tk.END)
+                entry.insert(0, new_name)
+                entry.config(state="readonly")
+
 
 def has_specie(name):
     names = name.split(" ")

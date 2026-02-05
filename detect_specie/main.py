@@ -1,25 +1,8 @@
-from pathlib import Path
-
-import birder
 from birder.inference.classification import infer_image
 import requests
 
-MODEL_PATH = Path.home() / ".exiftools" / "models" / "vit_reg4_m16_rms_avg_i-jepa-inat21.pt"
 
-# Charger le modèle et les infos
-net, model_info = birder.load_pretrained_model(
-    "vit_reg4_m16_rms_avg_i-jepa-inat21",
-    inference=True,
-    dst=MODEL_PATH
-)
-class_mapping = {v: k for k, v in model_info.class_to_idx.items()}
-
-# Créer la transformation
-size = birder.get_size_from_signature(model_info.signature)
-transform = birder.classification_transform(size, model_info.rgb_stats)
-
-
-def get_latin_name(class_id):
+def get_latin_name(class_id, class_mapping):
     full_latin_name = class_mapping.get(class_id, "")
     return " ".join(full_latin_name.split("_")[-2:])
 
@@ -49,12 +32,13 @@ def is_species_at_location(scientific_name, lat, lon, radius_km=500):
         return False
 
 
-def find_specie(image_path, lat=None, lon=None, threshold=0.2):
+def find_specie(image_path, lat, lon, net, class_mapping, transform):
     """
     Infère l'espèce de l'image et utilise la localisation pour valider la prédiction.
     Retourne le nom scientifique si trouvé, sinon "".
     """
     # inférence du modèle
+    threshold = 0.2
     out, _ = infer_image(net, image_path, transform)
     probs = out[0]
 
@@ -65,7 +49,7 @@ def find_specie(image_path, lat=None, lon=None, threshold=0.2):
         if score < threshold:
             continue
 
-        scientific_name = get_latin_name(class_id)
+        scientific_name = get_latin_name(class_id, class_mapping)
         if lat is None or lon is None:
             return scientific_name
         if is_species_at_location(scientific_name, lat, lon):

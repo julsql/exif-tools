@@ -3,17 +3,17 @@ import threading
 import tkinter as tk
 from tkinter import messagebox
 
-from detect_specie.main import find_specie
 from editor.config_manager import ConfigManager
 from editor.event_bus import EventBus
-from editor.metadata_widget import get_coordinates
 from editor.shared_data import StyleData
 
 
 class MenuBar:
     OS_CTRL = 'Command' if platform.system() == 'Darwin' else 'Control'
 
-    def __init__(self, root, reset_callback, open_image_callback, close_image_callback, recenter_callback, next_image, prev_image, reset_values, save, save_as, style_data: StyleData, event_bus: EventBus, config: ConfigManager):
+    def __init__(self, root, reset_callback, open_image_callback, close_image_callback, recenter_callback, next_image,
+                 prev_image, reset_values, save, save_as, style_data: StyleData, event_bus: EventBus,
+                 config: ConfigManager):
         self.root = root
         self.style_data = style_data
         self.event_bus = event_bus
@@ -30,7 +30,8 @@ class MenuBar:
                                 accelerator=self._format_accel("Shift+R"))
 
         switch_map_label = self.style_data.MAPS_SWITCH_LABEL[self.config.get('map', self.style_data.DEFAULT_MAP)]
-        switch_specie_recognition = self.style_data.SPECIE_SWITCH_LABEL[self.config.get('recognition', self.style_data.DEFAULT_SPECIE)]
+        switch_specie_recognition = self.style_data.SPECIE_SWITCH_LABEL[
+            self.config.get('recognition', self.style_data.DEFAULT_SPECIE)]
 
         outils_menu.add_command(label=switch_map_label, command=self.switch_map)
         outils_menu.add_command(label=switch_specie_recognition, command=self.switch_specie_recognition)
@@ -44,7 +45,8 @@ class MenuBar:
         file_menu.add_command(label="Ouvrir une image", command=open_image_callback,
                               accelerator=self._format_accel("O"))
         file_menu.add_command(label="Fermer l'image", command=close_image_callback, accelerator=self._format_accel("W"))
-        file_menu.add_command(label="Ajouter un marqueur centré", command=recenter_callback, accelerator=self._format_accel("D"))
+        file_menu.add_command(label="Ajouter un marqueur centré", command=recenter_callback,
+                              accelerator=self._format_accel("D"))
         file_menu.add_command(label="Image suivante", command=next_image, accelerator="Right")
         file_menu.add_command(label="Image précédente", command=prev_image, accelerator="Left")
         menu_bar.add_cascade(label="Fichier", menu=file_menu)
@@ -78,7 +80,8 @@ class MenuBar:
 
     def update(self):
         """Affiche une popup À propos"""
-        messagebox.showinfo("Mise à jour", "Pour mettre à jour, téléchargez la nouvelle version sur GitHub.\n\n https://github.com/julsql/exif-tools/releases/latest\n\nSinon, modifiez le fichier install.sh avec la nouvelle version (Version 1.2.0) et lancez le script dans un terminal.")
+        messagebox.showinfo("Mise à jour",
+                            "Pour mettre à jour, téléchargez la nouvelle version sur GitHub.\n\n https://github.com/julsql/exif-tools/releases/latest\n\nSinon, modifiez le fichier install.sh avec la nouvelle version (Version 1.2.0) et lancez le script dans un terminal.")
 
     def switch_map(self):
         old_map_tiles = self.config.get('map', self.style_data.DEFAULT_MAP)

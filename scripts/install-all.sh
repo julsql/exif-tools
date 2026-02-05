@@ -59,7 +59,21 @@ pip install -r requirements.txt
 pip install pyinstaller
 
 echo "⚙️ Compilation de l'application avec PyInstaller..."
-pyinstaller --clean --onefile --windowed --name "ExifTools" --hidden-import=piexif --hidden-import=PIL._tkinter_finder --add-data "assets:assets" main.py
+pyinstaller \
+  --clean \
+  --onedir \
+  --windowed \
+  --name "ExifTools" \
+  --hidden-import=piexif \
+  --hidden-import=PIL._tkinter_finder \
+  --hidden-import=birder \
+  --hidden-import=torch \
+  --hidden-import=torchvision \
+  --collect-all birder \
+  --collect-all torch \
+  --collect-all torchvision \
+  --add-data "assets:assets" \
+  main.py
 
 echo "🔚 Désactivation de l'environnement virtuel..."
 deactivate
