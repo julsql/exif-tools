@@ -78,6 +78,7 @@ class ExifEditorApp:
                                 self.image_content.open_file_dialog,
                                 self.image_content.close_image,
                                 self.right_pane.add_marker_center_of_map,
+                                self.image_content.find_specie,
                                 self.image_content.next_image,
                                 self.image_content.prev_image,
                                 self.metadata_content.reset_all,

@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import threading
 import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog
@@ -56,6 +57,7 @@ class ImageWidget(tk.Frame):
         self.save_icon = load_icon(os.path.join(assets_path, style_data.MODE, "save.png"), icon_height)
         self.save_as_icon = load_icon(os.path.join(assets_path, style_data.MODE, "save_as.png"), icon_height)
         self.resenter_icon = load_icon(os.path.join(assets_path, style_data.MODE, "recenter.png"), icon_height)
+        self.specie_recognition = load_icon(os.path.join(assets_path, style_data.MODE, "find_specie.png"), icon_height)
         self.add_photo_icon = load_icon(os.path.join(assets_path, style_data.MODE, "folder_open.png"), icon_height)
         self.close_icon = load_icon(os.path.join(assets_path, style_data.MODE, "close.png"), icon_height)
         self.prev_icon = load_icon(os.path.join(assets_path, style_data.MODE, "arrow_left.png"), icon_height)
@@ -75,11 +77,15 @@ class ImageWidget(tk.Frame):
 
         self.icon_label4 = tk.Label(self.top_frame, image=self.resenter_icon, bg=style_data.BG_TAB_COLOR,
                                     cursor=style_data.SELECT_CURSOR)
-        self.icon_label4.grid(row=0, column=2, padx=icon_padding)
+        self.icon_label4.grid(row=0, column=3, padx=icon_padding)
 
-        self.icon_label5 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.BG_TAB_COLOR,
+        self.icon_label5 = tk.Label(self.top_frame, image=self.specie_recognition, bg=style_data.BG_TAB_COLOR,
                                     cursor=style_data.SELECT_CURSOR)
-        self.icon_label5.grid(row=0, column=3, padx=icon_padding, sticky="e")
+        self.icon_label5.grid(row=0, column=4, padx=icon_padding)
+
+        self.icon_label6 = tk.Label(self.top_frame, image=self.close_icon, bg=style_data.BG_TAB_COLOR,
+                                    cursor=style_data.SELECT_CURSOR)
+        self.icon_label6.grid(row=0, column=5, padx=icon_padding, sticky="e")
 
         # Zone d'affichage de l'image
         self.image_area = tk.Label(self, bg=style_data.BG_COLOR)
@@ -116,7 +122,9 @@ class ImageWidget(tk.Frame):
         self.top_frame.grid_columnconfigure(0, weight=0)
         self.top_frame.grid_columnconfigure(1, weight=0)
         self.top_frame.grid_columnconfigure(2, weight=0)
-        self.top_frame.grid_columnconfigure(3, weight=1)
+        self.top_frame.grid_columnconfigure(3, weight=0)
+        self.top_frame.grid_columnconfigure(4, weight=0)
+        self.top_frame.grid_columnconfigure(5, weight=1)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(2, weight=1)
@@ -127,11 +135,15 @@ class ImageWidget(tk.Frame):
         self.icon_label2.bind(button_event, self.save_as)
         self.icon_label3.bind(button_event, self.open_file_dialog)
         self.icon_label4.bind(button_event, self.map_widget.add_marker_center_of_map)
-        self.icon_label5.bind(button_event, self.close_image)
+        self.icon_label5.bind(button_event, self.find_specie)
+        self.icon_label6.bind(button_event, self.close_image)
         self.prev_btn.bind(button_event, self.prev_image)
         self.next_btn.bind(button_event, self.next_image)
 
         self.loaded_image = None
+
+    def find_specie(self, event=None):
+        threading.Thread(target=self.event_bus.publish, args=("specie_recognition",)).start()
 
     def save_data(self, new_path=None):
         image = self.image_data.pil_image
