@@ -31,21 +31,7 @@ Dans une machine linux (ou VM)
 
 ```bash
 pip install pyinstaller
-pyinstaller \
-  --clean \
-  --onedir \
-  --windowed \
-  --name "ExifTools" \
-  --hidden-import=piexif \
-  --hidden-import=PIL._tkinter_finder \
-  --hidden-import=birder \
-  --hidden-import=torch \
-  --hidden-import=torchvision \
-  --collect-all birder \
-  --collect-all torch \
-  --collect-all torchvision \
-  --add-data "assets:assets" \
-  main.py
+pyinstaller --noconfirm --clean ExifTools.spec
 ```
 
 ### Faire l'application linux

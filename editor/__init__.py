@@ -1,3 +1,6 @@
+# python
+# Package PyQt6 pour la migration progressive de l'app.
+
 import os
 import sys
 

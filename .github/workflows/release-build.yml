@@ -1,0 +1,184 @@
+name: Build installers on release
+
+on:
+  release:
+    types: [ published ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            artifact_suffix: mac-intel
+            arch: x86_64
+          - os: macos-14
+            artifact_suffix: mac-arm
+            arch: arm64
+          - os: windows-latest
+            artifact_suffix: windows
+            arch: x86_64
+          - os: ubuntu-latest
+            artifact_suffix: linux-x86_64
+            arch: x86_64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.os == 'windows-latest' && '3.11' || '3.12' }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller
+          python -m pip cache purge
+
+      - name: Windows - generate version resource for EXE
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          $ver = "${{ github.event.release.tag_name }}"
+          $parts = $ver.Split(".")
+          while ($parts.Length -lt 3) { $parts += "0" }
+          $maj = $parts[0]; $min = $parts[1]; $pat = $parts[2]
+
+          @"
+          # UTF-8
+          VSVersionInfo(
+            ffi=FixedFileInfo(
+              filevers=($maj, $min, $pat, 0),
+              prodvers=($maj, $min, $pat, 0),
+              mask=0x3f,
+              flags=0x0,
+              OS=0x4,
+              fileType=0x1,
+              subtype=0x0,
+              date=(0, 0)
+            ),
+            kids=[
+              StringFileInfo([
+                StringTable(
+                  '040904B0',
+                  [
+                    StringStruct('CompanyName', 'Jul SQL'),
+                    StringStruct('FileDescription', 'ExifTools'),
+                    StringStruct('FileVersion', '$ver'),
+                    StringStruct('InternalName', 'ExifTools'),
+                    StringStruct('OriginalFilename', 'ExifTools.exe'),
+                    StringStruct('ProductName', 'ExifTools'),
+                    StringStruct('ProductVersion', '$ver')
+                  ]
+                )
+              ]),
+              VarFileInfo([VarStruct('Translation', [0x0409, 1200])])
+            ]
+          )
+          "@ | Set-Content -Encoding UTF8 build/version_info.txt
+
+      - name: Build (PyInstaller)
+        run: |
+          pyinstaller --noconfirm --clean ExifTools.spec
+
+      # ---------------- macOS: DMG ----------------
+      - name: macOS - create DMG
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          brew update
+          brew install create-dmg
+          mkdir -p out
+          create-dmg \
+            --volname "ExifTools" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 120 \
+            --app-drop-link 600 185 \
+            "out/ExifTools-${{ github.event.release.tag_name }}-${{ matrix.artifact_suffix }}.dmg" \
+            "dist/ExifTools.app"
+
+      # ---------------- Windows: Inno Setup installer ----------------
+      - name: Windows - install Inno Setup
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          choco install innosetup -y
+
+      - name: Windows - build installer (Inno Setup)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          $ver = "${{ github.event.release.tag_name }}"
+
+          @"
+          #define MyAppName "ExifTools"
+          #define MyAppVersion "$ver"
+          #define MyAppPublisher "Jul SQL"
+          #define MyAppExeName "ExifTools.exe"
+
+          [Setup]
+          AppId={{A8C2D3A1-0000-0000-0000-000000000001}}
+          AppName={#MyAppName}
+          AppVersion={#MyAppVersion}
+          AppPublisher={#MyAppPublisher}
+          DefaultDirName={autopf}\{#MyAppName}
+          DefaultGroupName={#MyAppName}
+          OutputDir=out
+          OutputBaseFilename=ExifTools-$ver-windows-setup
+          Compression=lzma
+          SolidCompression=yes
+          WizardStyle=modern
+
+          VersionInfoVersion={#MyAppVersion}
+          VersionInfoProductVersion={#MyAppVersion}
+          VersionInfoProductName={#MyAppName}
+          VersionInfoCompany={#MyAppPublisher}
+          VersionInfoDescription={#MyAppName}
+
+          [Files]
+          Source: "dist\ExifTools\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
+
+          [Icons]
+          Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+          Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+
+          [Tasks]
+          Name: "desktopicon"; Description: "Créer une icône sur le bureau"; GroupDescription: "Raccourcis:"; Flags: unchecked
+
+          [Run]
+          Filename: "{app}\{#MyAppExeName}"; Description: "Lancer ExifTools"; Flags: nowait postinstall skipifsilent
+          "@ | Set-Content -Encoding UTF8 installer.iss
+
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+
+      # ---------------- Linux: AppImage (x86_64) ----------------
+      - name: Linux - prepare release package
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          rm -rf build/
+          rm -rf .git/
+          RELEASE_DIR=release
+          mkdir -p $RELEASE_DIR
+          mkdir -p out
+          mv dist/ExifTools $RELEASE_DIR/
+          cp assets/icon.png $RELEASE_DIR/exiftools.png
+          tar czf out/ExifTools-${{ github.event.release.tag_name }}-linux-x86_64.tar.gz -C $RELEASE_DIR .
+          ls -lh out/ExifTools-${{ github.event.release.tag_name }}-linux-x86_64.tar.gz
+
+      # ---------------- Upload release assets ----------------
+      - name: Upload artifacts to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*

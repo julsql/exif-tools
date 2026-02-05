@@ -3,12 +3,12 @@
 set -e  # Stoppe le script en cas d'erreur
 trap 'echo "❌ Une erreur est survenue. Installation interrompue."' ERR
 
+VERSION="1.2.0"
+
 # === Config personnalisable ===
 APP_NAME="Éditeur Exif"
 
-VERSION="1.2.0"
 APP_DIR="$HOME/.exiftools"
-
 PYTHON="/usr/local/bin/python3.9"
 APP_FOLDER="$PWD/exif-tools-$VERSION"
 APP_REPO_URL="https://github.com/julsql/exif-tools/archive/refs/tags/$VERSION.zip"
@@ -48,21 +48,7 @@ pip install -r requirements.txt
 pip install pyinstaller
 
 echo "⚙️ Compilation de l'application avec PyInstaller..."
-pyinstaller \
-  --clean \
-  --onedir \
-  --windowed \
-  --name "ExifTools" \
-  --hidden-import=piexif \
-  --hidden-import=PIL._tkinter_finder \
-  --hidden-import=birder \
-  --hidden-import=torch \
-  --hidden-import=torchvision \
-  --collect-all birder \
-  --collect-all torch \
-  --collect-all torchvision \
-  --add-data "assets:assets" \
-  main.py
+pyinstaller --noconfirm --clean ExifTools.spec
 
 echo "🔚 Désactivation de l'environnement virtuel..."
 deactivate
