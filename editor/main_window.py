@@ -4,7 +4,7 @@ import queue
 
 import requests
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QAction, QKeySequence, QIcon
+from PyQt6.QtGui import QAction, QKeySequence, QIcon, QColor, QPalette
 from PyQt6.QtWidgets import (
     QMainWindow,
     QSplitter,
@@ -29,12 +29,16 @@ class MainWindow(QMainWindow):
     DEFAULT_WIDTH = 1200
     DEFAULT_APP_TITLE = "Éditeur Exif"
 
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
 
+        self.app = app
         self.style_data = StyleData()
         self.config = ConfigManager()
         self.config.load()
+
+        theme = self.config.get("theme", "dark")
+        self.style_data = StyleData(mode=theme)
 
         self.setWindowTitle(self.DEFAULT_APP_TITLE)
         self.setMinimumSize(800, 600)
@@ -76,6 +80,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.main_splitter)
 
         self.setStyleSheet(f"QMainWindow {{ background: {self.style_data.BG_COLOR}; }}")
+        self.apply_style()
 
         # Wiring
         self.image_panel.image_opened.connect(self._on_image_opened)
@@ -88,6 +93,12 @@ class MainWindow(QMainWindow):
 
         self.map_panel.coords_picked.connect(self._on_map_coords_picked)
         self.metadata_panel.metadata_changed.connect(self._on_metadata_changed)
+
+    def apply_style(self) -> None:
+        self.setStyleSheet(f"QMainWindow {{ background: {self.style_data.BG_COLOR}; }}")
+        self.image_panel.apply_style()
+        self.metadata_panel.apply_style()
+        self.map_panel.setStyleSheet(f"background: {self.style_data.BG_COLOR};")
 
     def _update_marker_actions_enabled(self) -> None:
         enabled = bool(self.image_panel.image_path)
@@ -170,6 +181,10 @@ class MainWindow(QMainWindow):
         act_reset_window.triggered.connect(self.reset_window)
         menu_fenetre.addAction(act_reset_window)
 
+        self.act_toggle_theme = QAction("", self)
+        self.act_toggle_theme.triggered.connect(self.toggle_theme)
+        menu_fenetre.addAction(self.act_toggle_theme)
+
         # Switch map tiles (comme avant)
         self.act_switch_map = QAction("", self)
         self.act_switch_map.triggered.connect(self.switch_map)
@@ -181,7 +196,7 @@ class MainWindow(QMainWindow):
         menu_fenetre.addAction(self.act_switch_recognition)
 
         self._refresh_switch_labels()
-
+        self._refresh_theme_label()
         # Fichier
         menu_fichier = menu_bar.addMenu("Fichier")
 
@@ -236,6 +251,55 @@ class MainWindow(QMainWindow):
         act_about.triggered.connect(self._about)
         menu_aide.addAction(act_about)
         self._update_marker_actions_enabled()
+
+    def _refresh_theme_label(self) -> None:
+        if self.style_data.MODE == "dark":
+            self.act_toggle_theme.setText("Passer en mode clair")
+        else:
+            self.act_toggle_theme.setText("Passer en mode sombre")
+        self.app.setPalette(self.build_palette())
+
+    def build_palette(self):
+        palette = QPalette()
+
+        # Fond général des fenêtres et dialogs
+        palette.setColor(QPalette.ColorRole.Window, QColor(self.style_data.BG_COLOR))
+        palette.setColor(QPalette.ColorRole.WindowText, QColor(self.style_data.FONT_COLOR))
+
+        # Fond des zones éditables (QLineEdit, QTextEdit, etc.)
+        palette.setColor(QPalette.ColorRole.Base, QColor(self.style_data.BG_TAB_COLOR))
+        palette.setColor(QPalette.ColorRole.Text, QColor(self.style_data.FONT_COLOR))
+
+        # Boutons
+        palette.setColor(QPalette.ColorRole.Button, QColor(self.style_data.BUTTON_COLOR))
+        palette.setColor(QPalette.ColorRole.ButtonText, QColor(self.style_data.FONT_COLOR))
+
+        # Sélection
+        palette.setColor(QPalette.ColorRole.Highlight, QColor(self.style_data.SELECT_COLOR))
+        palette.setColor(QPalette.ColorRole.HighlightedText, QColor(self.style_data.FONT_COLOR))
+
+        # États désactivés
+        palette.setColor(QPalette.ColorGroup.Disabled,
+                         QPalette.ColorRole.Text,
+                         QColor(self.style_data.FG_DISABLE))
+        palette.setColor(QPalette.ColorGroup.Disabled,
+                         QPalette.ColorRole.WindowText,
+                         QColor(self.style_data.FG_DISABLE))
+        palette.setColor(QPalette.ColorGroup.Disabled,
+                         QPalette.ColorRole.ButtonText,
+                         QColor(self.style_data.FG_DISABLE))
+        return palette
+
+    def toggle_theme(self) -> None:
+        new_mode = "light" if self.style_data.MODE == "dark" else "dark"
+        self.style_data.set_mode(new_mode)
+
+        self.config.set("theme", new_mode)
+        self.config.save()
+
+        self.apply_style()
+        self._refresh_theme_label()
+        self._refresh_switch_labels()
 
     def _refresh_switch_labels(self) -> None:
         current_map = self.config.get("map", self.style_data.DEFAULT_MAP)

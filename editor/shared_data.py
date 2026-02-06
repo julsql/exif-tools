@@ -1,3 +1,4 @@
+# python
 class ImageData:
     def __init__(self):
         self.image_path = None
@@ -12,8 +13,6 @@ class MetadataData:
 
 
 class StyleData:
-    MODE = "dark"
-
     EXIF_DATE_FORMAT = '%Y:%m:%d %H:%M:%S'
     DISPLAYED_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
     ACCEPTED_DATE_FORMATS = [
@@ -50,7 +49,14 @@ class StyleData:
         False: "Activer la reconnaissance d'espèce"
     }
 
-    def __init__(self):
+    def __init__(self, mode: str = "dark"):
+        self.MODE = "dark"
+        self.set_mode(mode)
+
+    def set_mode(self, mode: str) -> None:
+        mode = (mode or "dark").lower()
+        self.MODE = "light" if mode == "light" else "dark"
+
         if self.MODE == "dark":
             self.BG_COLOR = "#1e1e1e"
             self.FONT_COLOR = "#f0f0f0"

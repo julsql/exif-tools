@@ -63,6 +63,53 @@ class MetadataPanel(QWidget):
         self._build_ui()
 
     def _build_ui(self) -> None:
+        grid = QGridLayout(self)
+        grid.setContentsMargins(10, 10, 10, 10)
+        grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(10)
+        self._grid = grid
+
+        self.reset_all_btn = QToolButton(self)
+        self.reset_all_btn.setToolTip("Réinitialiser les valeurs")
+        self.reset_all_btn.clicked.connect(self.reset_all)
+        grid.addWidget(self.reset_all_btn, 0, 0, 1, 1, Qt.AlignmentFlag.AlignLeft)
+
+        row = 1
+        for spec in self.FIELDS:
+            lab = QLabel(f"{spec.title} :")
+            entry = QLineEdit()
+            entry.setReadOnly(spec.readonly)
+
+            self.entries[spec.key] = entry
+
+            grid.addWidget(lab, row, 0)
+            grid.addWidget(entry, row, 1)
+
+            if not spec.readonly:
+                btn = QToolButton(self)
+                btn.setToolTip(f"Réinitialiser {spec.title}")
+                btn.clicked.connect(lambda _=False, k=spec.key: self.reset_field(k))
+                grid.addWidget(btn, row, 2)
+
+                entry.editingFinished.connect(self._on_edit_finished)
+
+                # NEW: garder une ref pour recolorer l’icône
+                entry._reset_btn = btn  # type: ignore[attr-defined]
+            else:
+                spacer = QLabel("")
+                spacer.setFixedWidth(24)
+                grid.addWidget(spacer, row, 2)
+
+            row += 1
+
+        self.error_label = QLabel(self.DEFAULT_MESSAGE)
+        grid.addWidget(self.error_label, row, 0, 1, 3)
+
+        grid.setColumnStretch(1, 1)
+
+        self.apply_style()
+
+    def apply_style(self) -> None:
         self.setStyleSheet(
             f"""
             QWidget {{
@@ -87,50 +134,19 @@ class MetadataPanel(QWidget):
             """
         )
 
-        grid = QGridLayout(self)
-        grid.setContentsMargins(10, 10, 10, 10)
-        grid.setHorizontalSpacing(10)
-        grid.setVerticalSpacing(10)
-
         reset_icon = QIcon(resource_path(f"assets/{self.style.MODE}/reset.png"))
-
-        self.reset_all_btn = QToolButton(self)
         self.reset_all_btn.setIcon(reset_icon)
-        self.reset_all_btn.setToolTip("Réinitialiser les valeurs")
-        self.reset_all_btn.clicked.connect(self.reset_all)
-        grid.addWidget(self.reset_all_btn, 0, 0, 1, 1, Qt.AlignmentFlag.AlignLeft)
 
-        row = 1
-        for spec in self.FIELDS:
-            lab = QLabel(f"{spec.title} :")
-            entry = QLineEdit()
-            entry.setReadOnly(spec.readonly)
-
-            self.entries[spec.key] = entry
-
-            grid.addWidget(lab, row, 0)
-            grid.addWidget(entry, row, 1)
-
-            if not spec.readonly:
-                btn = QToolButton(self)
-                btn.setIcon(reset_icon)
-                btn.setToolTip(f"Réinitialiser {spec.title}")
-                btn.clicked.connect(lambda _=False, k=spec.key: self.reset_field(k))
-                grid.addWidget(btn, row, 2)
-
-                entry.editingFinished.connect(self._on_edit_finished)
-            else:
-                spacer = QLabel("")
-                spacer.setFixedWidth(24)
-                grid.addWidget(spacer, row, 2)
-
-            row += 1
-
-        self.error_label = QLabel(self.DEFAULT_MESSAGE)
+        # Met la couleur du label d'erreur
         self.error_label.setStyleSheet(f"color: {self.style.FONT_COLOR};")
-        grid.addWidget(self.error_label, row, 0, 1, 3)
+        if self.error_label.text().startswith(self.WARNING_MESSAGE):
+            self.error_label.setStyleSheet(f"color: {self.style.FONT_ERROR_COLOR};")
 
-        grid.setColumnStretch(1, 1)
+        # Mettre l’icône reset sur les boutons de reset par champ
+        for entry in self.entries.values():
+            btn = getattr(entry, "_reset_btn", None)
+            if btn is not None:
+                btn.setIcon(reset_icon)
 
     def _on_edit_finished(self) -> None:
         ok_date = self._validate_date()

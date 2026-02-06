@@ -46,7 +46,7 @@ def main_qt() -> None:
     icon_path = resource_path("assets/icon.png")
     app.setWindowIcon(QIcon(icon_path))
 
-    win = MainWindow()
+    win = MainWindow(app)
     win.show()
 
     check_update_qt(win)
