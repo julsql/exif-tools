@@ -26,7 +26,7 @@ from editor.toast import Toast
 
 
 class ImagePanel(QWidget):
-    image_opened = pyqtSignal(str)   # path
+    image_opened = pyqtSignal(str)  # path
     image_closed = pyqtSignal()
     request_recenter = pyqtSignal()
     request_find_specie = pyqtSignal()
@@ -49,6 +49,84 @@ class ImagePanel(QWidget):
         self.setAcceptDrops(True)
 
     def _build_ui(self) -> None:
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
+        self._root_layout = root
+
+        self.bar = QFrame(self)
+        self.bar_layout = QHBoxLayout(self.bar)
+        self.bar_layout.setContentsMargins(8, 6, 8, 6)
+        self.bar_layout.setSpacing(8)
+
+        self.btn_save = QToolButton()
+        self.btn_save.setToolTip("Enregistrer (Ctrl+S)")
+        self.btn_save.clicked.connect(self.save_requested.emit)
+
+        self.btn_save_as = QToolButton()
+        self.btn_save_as.setToolTip("Enregistrer sous (Ctrl+Shift+S)")
+        self.btn_save.clicked.connect(self.save_as_requested.emit)
+
+        self.btn_open = QToolButton()
+        self.btn_open.setToolTip("Ouvrir une image (Ctrl+O)")
+        self.btn_open.clicked.connect(self.open_file_dialog)
+
+        self.btn_recenter = QToolButton()
+        self.btn_recenter.setToolTip("Ajouter un marqueur centré (Ctrl+D)")
+        self.btn_recenter.clicked.connect(lambda: self.request_recenter.emit())
+
+        self.btn_find_specie = QToolButton()
+        self.btn_find_specie.setToolTip("Recherche l'espèce (Ctrl+F)")
+        self.btn_find_specie.clicked.connect(lambda: self.request_find_specie.emit())
+
+        self.btn_close = QToolButton()
+        self.btn_close.setToolTip("Fermer l'image (Ctrl+W)")
+        self.btn_close.clicked.connect(self.close_image)
+
+        for b in (self.btn_save, self.btn_save_as, self.btn_open, self.btn_recenter, self.btn_find_specie):
+            self.bar_layout.addWidget(b)
+
+        self.bar_layout.addStretch(1)
+        self.bar_layout.addWidget(self.btn_close)
+
+        root.addWidget(self.bar)
+
+        self.image_area = QFrame(self)
+        area_layout = QVBoxLayout(self.image_area)
+        area_layout.setContentsMargins(10, 10, 10, 10)
+
+        self.image_label = QLabel("")
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        area_layout.addWidget(self.image_label, 1)
+
+        self.drop_hint = QLabel("📂 Glissez une image ici\nou cliquez pour ouvrir")
+        self.drop_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        area_layout.addWidget(self.drop_hint, 1)
+
+        root.addWidget(self.image_area, 1)
+        self.drop_hint.mousePressEvent = lambda e: self.open_file_dialog()
+
+        nav = QFrame(self)
+        nav_layout = QHBoxLayout(nav)
+        nav_layout.setContentsMargins(20, 8, 20, 8)
+
+        self.btn_prev = QToolButton()
+        self.btn_prev.clicked.connect(self.prev_image)
+
+        self.btn_next = QToolButton()
+        self.btn_next.clicked.connect(self.next_image)
+
+        nav_layout.addWidget(self.btn_prev)
+        nav_layout.addStretch(1)
+        nav_layout.addWidget(self.btn_next)
+
+        root.addWidget(nav)
+        self.nav = nav
+
+        self._set_image_visible(False)
+        self.apply_style()
+
+    def apply_style(self) -> None:
         self.setStyleSheet(
             f"""
             QWidget {{
@@ -60,97 +138,20 @@ class ImagePanel(QWidget):
             }}
             """
         )
-
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
-
-        # Top toolbar (icônes à gauche)
-        bar = QFrame(self)
-        bar.setStyleSheet(f"background: {self.style.BG_TAB_COLOR};")
-        bar_layout = QHBoxLayout(bar)
-        bar_layout.setContentsMargins(8, 6, 8, 6)
-        bar_layout.setSpacing(8)
+        self.bar.setStyleSheet(f"background: {self.style.BG_TAB_COLOR};")
+        self.drop_hint.setStyleSheet(f"color: {self.style.FONT_COLOR};")
 
         def icon(name: str) -> QIcon:
             return QIcon(resource_path(f"assets/{self.style.MODE}/{name}"))
 
-        self.btn_save = QToolButton()
         self.btn_save.setIcon(icon("save.png"))
-        self.btn_save.setToolTip("Enregistrer (Ctrl+S)")
-        self.btn_save.clicked.connect(self.save_requested.emit)
-
-        self.btn_save_as = QToolButton()
         self.btn_save_as.setIcon(icon("save_as.png"))
-        self.btn_save_as.setToolTip("Enregistrer sous (Ctrl+Shift+S)")
-        self.btn_save.clicked.connect(self.save_as_requested.emit)
-
-        self.btn_open = QToolButton()
         self.btn_open.setIcon(icon("folder_open.png"))
-        self.btn_open.setToolTip("Ouvrir une image (Ctrl+O)")
-        self.btn_open.clicked.connect(self.open_file_dialog)
-
-        self.btn_recenter = QToolButton()
         self.btn_recenter.setIcon(icon("recenter.png"))
-        self.btn_recenter.setToolTip("Ajouter un marqueur centré (Ctrl+D)")
-        self.btn_recenter.clicked.connect(lambda: self.request_recenter.emit())
-
-        self.btn_find_specie = QToolButton()
         self.btn_find_specie.setIcon(icon("find_specie.png"))
-        self.btn_find_specie.setToolTip("Recherche l'espèce (Ctrl+F)")
-        self.btn_find_specie.clicked.connect(lambda: self.request_find_specie.emit())
-
-        self.btn_close = QToolButton()
         self.btn_close.setIcon(icon("close.png"))
-        self.btn_close.setToolTip("Fermer l'image (Ctrl+W)")
-        self.btn_close.clicked.connect(self.close_image)
-
-        for b in (self.btn_save, self.btn_save_as, self.btn_open, self.btn_recenter, self.btn_find_specie):
-            bar_layout.addWidget(b)
-
-        bar_layout.addStretch(1)
-        bar_layout.addWidget(self.btn_close)
-
-        root.addWidget(bar)
-
-        # Image area
-        self.image_area = QFrame(self)
-        area_layout = QVBoxLayout(self.image_area)
-        area_layout.setContentsMargins(10, 10, 10, 10)
-
-        self.image_label = QLabel("")
-        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        area_layout.addWidget(self.image_label, 1)
-
-        self.drop_hint = QLabel("📂 Glissez une image ici\nou cliquez pour ouvrir")
-        self.drop_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.drop_hint.setStyleSheet(f"color: {self.style.FONT_COLOR};")
-        area_layout.addWidget(self.drop_hint, 1)
-
-        root.addWidget(self.image_area, 1)
-
-        self.drop_hint.mousePressEvent = lambda e: self.open_file_dialog()
-
-        # Nav buttons
-        nav = QFrame(self)
-        nav_layout = QHBoxLayout(nav)
-        nav_layout.setContentsMargins(20, 8, 20, 8)
-
-        self.btn_prev = QToolButton()
         self.btn_prev.setIcon(icon("arrow_left.png"))
-        self.btn_prev.clicked.connect(self.prev_image)
-
-        self.btn_next = QToolButton()
         self.btn_next.setIcon(icon("arrow_right.png"))
-        self.btn_next.clicked.connect(self.next_image)
-
-        nav_layout.addWidget(self.btn_prev)
-        nav_layout.addStretch(1)
-        nav_layout.addWidget(self.btn_next)
-
-        root.addWidget(nav)
-
-        self._set_image_visible(False)
 
     def _set_image_visible(self, visible: bool) -> None:
         self.image_label.setVisible(visible)
