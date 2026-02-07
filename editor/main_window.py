@@ -250,6 +250,9 @@ class MainWindow(QMainWindow):
         act_about = QAction("À propos", self)
         act_about.triggered.connect(self._about)
         menu_aide.addAction(act_about)
+        update_about = QAction("Mise à jour", self)
+        update_about.triggered.connect(self._update)
+        menu_aide.addAction(update_about)
         self._update_marker_actions_enabled()
 
     def _refresh_theme_label(self) -> None:
@@ -331,6 +334,46 @@ class MainWindow(QMainWindow):
     def _about(self) -> None:
         from PyQt6.QtWidgets import QMessageBox
         QMessageBox.information(self, "À propos", "Éditeur Exif\nVersion 2.0.0\n© 2025 Jul SQL")
+
+    def _update(self):
+        from PyQt6.QtWidgets import QMessageBox, QLabel
+        from PyQt6.QtCore import Qt
+
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Mise à jour")
+        msg.setIcon(QMessageBox.Icon.Information)
+
+        msg.setText(
+            """
+            <p>
+            Pour mettre à jour, téléchargez la nouvelle version sur GitHub.
+            </p>
+
+            <p>
+            <a href="https://github.com/julsql/exif-tools/releases/latest">
+            https://github.com/julsql/exif-tools/releases/latest
+            </a>
+            </p>
+
+            <p>
+            Sinon, modifiez le fichier <b>install.sh</b> avec la nouvelle version
+            (Version 2.0.0) et lancez le script dans un terminal.
+            </p>
+            """
+        )
+
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+
+        # 🔑 Rendre le lien cliquable
+        label = msg.findChild(QLabel)
+        if label is not None:
+            label.setTextFormat(Qt.TextFormat.RichText)
+            label.setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextBrowserInteraction
+            )
+            label.setOpenExternalLinks(True)
+
+        msg.exec()
 
     def reset_window(self) -> None:
         self.resize(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
