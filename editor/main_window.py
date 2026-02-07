@@ -330,7 +330,7 @@ class MainWindow(QMainWindow):
 
     def _about(self) -> None:
         from PyQt6.QtWidgets import QMessageBox
-        QMessageBox.information(self, "À propos", "Éditeur Exif\nVersion 1.2.0\n© 2025 Jul SQL")
+        QMessageBox.information(self, "À propos", "Éditeur Exif\nVersion 2.0.0\n© 2025 Jul SQL")
 
     def reset_window(self) -> None:
         self.resize(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
