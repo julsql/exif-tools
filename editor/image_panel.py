@@ -65,7 +65,7 @@ class ImagePanel(QWidget):
 
         self.btn_save_as = QToolButton()
         self.btn_save_as.setToolTip("Enregistrer sous (Ctrl+Shift+S)")
-        self.btn_save.clicked.connect(self.save_as_requested.emit)
+        self.btn_save_as.clicked.connect(self.save_as_requested.emit)
 
         self.btn_open = QToolButton()
         self.btn_open.setToolTip("Ouvrir une image (Ctrl+O)")
@@ -254,7 +254,7 @@ class ImagePanel(QWidget):
         self.image_path = self.image_list[self.current_index]
         self.load_image()
 
-    def save(self, get_values_callable=None) -> None:
+    def save(self, get_values_callable) -> None:
         if not (self.image_path and self.pil_image):
             return
         if get_values_callable is None:
@@ -284,7 +284,7 @@ class ImagePanel(QWidget):
         Toast(self.window(), self.style, "Image sauvegardée avec succès")
         self.load_image()
 
-    def save_as(self, get_values_callable=None) -> None:
+    def save_as(self, get_values_callable) -> None:
         if not (self.image_path and self.pil_image):
             return
         if get_values_callable is None:
