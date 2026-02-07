@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 from editor import resource_path
 from editor.main_window import MainWindow
 
-VERSION = "1.2.0"
+VERSION = "2.0.0"
 GITHUB_REPO = "julsql/exif-tools"
 
 
