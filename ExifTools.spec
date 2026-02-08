@@ -1,8 +1,13 @@
 # python
 # -*- mode: python ; coding: utf-8 -*-
 import os
+import sys
 
 from PyInstaller.utils.hooks import collect_all, collect_submodules
+
+is_linux = sys.platform.startswith("linux")
+is_macos = sys.platform == "darwin"
+is_windows = sys.platform.startswith("win")
 
 block_cipher = None
 
@@ -26,8 +31,7 @@ hiddenimports += collect_submodules("PyQt6.QtWebChannel")
 hiddenimports += ["PyQt6.sip"]
 hiddenimports += ["onnxscript.ir"]
 
-import sys
-if sys.platform.startswith("win"):
+if is_windows:
     excludes = ["onnxscript", "onnx", "torch", "torchvision"]
 else:
     excludes = []
@@ -57,7 +61,7 @@ exe = EXE(
     pyz,
     a.scripts,
     [],
-    exclude_binaries=True,
+    exclude_binaries=not is_linux,
     name="ExifTools",
     debug=False,
     bootloader_ignore_signals=False,
@@ -69,18 +73,22 @@ exe = EXE(
     **exe_kwargs,
 )
 
-coll = COLLECT(
+if not is_linux:
+    coll = COLLECT(
     exe,
     a.binaries,
     a.datas,
     strip=False,
     upx=True,
     name="ExifTools",
-)
+    )
+else:
+    coll = None
 
-app = BUNDLE(
-    coll,
-    name="ExifTools.app",
-    icon="assets/icon.icns",
-    bundle_identifier="com.julsql.exiftools",
-)
+if is_macos:
+    app = BUNDLE(
+        coll,
+        name="ExifTools.app",
+        icon="assets/icon.icns",
+        bundle_identifier="com.julsql.exiftools",
+    )
