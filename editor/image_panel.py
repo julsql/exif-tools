@@ -60,26 +60,32 @@ class ImagePanel(QWidget):
         self.bar_layout.setSpacing(8)
 
         self.btn_save = QToolButton()
+        self.btn_save.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_save.setToolTip("Enregistrer (Ctrl+S)")
         self.btn_save.clicked.connect(self.save_requested.emit)
 
         self.btn_save_as = QToolButton()
+        self.btn_save_as.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_save_as.setToolTip("Enregistrer sous (Ctrl+Shift+S)")
         self.btn_save_as.clicked.connect(self.save_as_requested.emit)
 
         self.btn_open = QToolButton()
+        self.btn_open.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_open.setToolTip("Ouvrir une image (Ctrl+O)")
         self.btn_open.clicked.connect(self.open_file_dialog)
 
         self.btn_recenter = QToolButton()
+        self.btn_recenter.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_recenter.setToolTip("Ajouter un marqueur centré (Ctrl+D)")
         self.btn_recenter.clicked.connect(lambda: self.request_recenter.emit())
 
         self.btn_find_specie = QToolButton()
+        self.btn_find_specie.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_find_specie.setToolTip("Recherche l'espèce (Ctrl+F)")
         self.btn_find_specie.clicked.connect(lambda: self.request_find_specie.emit())
 
         self.btn_close = QToolButton()
+        self.btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_close.setToolTip("Fermer l'image (Ctrl+W)")
         self.btn_close.clicked.connect(self.close_image)
 
@@ -100,6 +106,7 @@ class ImagePanel(QWidget):
         area_layout.addWidget(self.image_label, 1)
 
         self.drop_hint = QLabel("📂 Glissez une image ici\nou cliquez pour ouvrir")
+        self.drop_hint.setCursor(Qt.CursorShape.PointingHandCursor)
         self.drop_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         area_layout.addWidget(self.drop_hint, 1)
 
@@ -111,9 +118,11 @@ class ImagePanel(QWidget):
         nav_layout.setContentsMargins(20, 8, 20, 8)
 
         self.btn_prev = QToolButton()
+        self.btn_prev.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_prev.clicked.connect(self.prev_image)
 
         self.btn_next = QToolButton()
+        self.btn_next.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_next.clicked.connect(self.next_image)
 
         nav_layout.addWidget(self.btn_prev)

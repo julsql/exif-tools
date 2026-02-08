@@ -70,6 +70,7 @@ class MetadataPanel(QWidget):
         self._grid = grid
 
         self.reset_all_btn = QToolButton(self)
+        self.reset_all_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.reset_all_btn.setToolTip("Réinitialiser les valeurs")
         self.reset_all_btn.clicked.connect(self.reset_all)
         grid.addWidget(self.reset_all_btn, 0, 0, 1, 1, Qt.AlignmentFlag.AlignLeft)
@@ -87,6 +88,7 @@ class MetadataPanel(QWidget):
 
             if not spec.readonly:
                 btn = QToolButton(self)
+                btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn.setToolTip(f"Réinitialiser {spec.title}")
                 btn.clicked.connect(lambda _=False, k=spec.key: self.reset_field(k))
                 grid.addWidget(btn, row, 2)
