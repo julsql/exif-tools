@@ -42,9 +42,22 @@ if [[ -f "./$VERSION.zip" ]]; then
   rm "./$VERSION.zip"
 fi
 
-if [[ -d "$APP_FOLDER" ]]; then
+if [ -n "$APP_FOLDER" ] \
+   && [ "$APP_FOLDER" != "/" ] \
+   && [ "$APP_FOLDER" != "." ] \
+   && [ "$APP_FOLDER" != "./" ] \
+   && [ -d "$APP_FOLDER" ]; then
   rm -rf "$APP_FOLDER"
 fi
+
+if [ -n "$EXEC_DEST_PATH" ] \
+   && [ "$EXEC_DEST_PATH" != "/" ] \
+   && [ "$EXEC_DEST_PATH" != "." ] \
+   && [ "$EXEC_DEST_PATH" != "./" ] \
+   && [ -d "$EXEC_DEST_PATH" ]; then
+    rm -rf "$EXEC_DEST_PATH"
+fi
+
 wget $APP_REPO_URL
 unzip "./$VERSION.zip"
 rm "./$VERSION.zip"
