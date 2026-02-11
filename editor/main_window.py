@@ -477,8 +477,11 @@ class MainWindow(QMainWindow):
                 # On log, UX: silencieux comme avant (tu peux aussi ajouter un toast Qt ici)
                 print(payload)
 
-    def _on_specie_detected(self, specie: str) -> None:
+    def _on_specie_detected(self, payload: tuple) -> None:
+        (specie, path) = payload
         if not specie:
+            return
+        if self.image_panel.image_path != path:
             return
         url = self._get_inat_taxon_link(specie)
         dlg = SpecieDialog(self, specie, url)
