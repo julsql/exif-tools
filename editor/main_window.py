@@ -346,7 +346,7 @@ class MainWindow(QMainWindow):
 
     def _about(self) -> None:
         from PyQt6.QtWidgets import QMessageBox
-        QMessageBox.information(self, "À propos", "Éditeur Exif\nVersion 2.0.1\n© 2025 Jul SQL")
+        QMessageBox.information(self, "À propos", "Éditeur Exif\nVersion 2.0.2\n© 2025 Jul SQL")
 
     def _update(self):
         from PyQt6.QtWidgets import QMessageBox, QLabel
@@ -370,7 +370,7 @@ class MainWindow(QMainWindow):
 
             <p>
             Sinon, modifiez le fichier <b>install.sh</b> avec la nouvelle version
-            (Version 2.0.1) et lancez le script dans un terminal.
+            (Version 2.0.2) et lancez le script dans un terminal.
             </p>
             """
         )
