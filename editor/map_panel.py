@@ -123,6 +123,9 @@ class MapPanel(QWidget):
     def set_view(self, lat: float, lon: float, zoom: int) -> None:
         self.view.page().runJavaScript(f"setView({lat}, {lon}, {int(zoom)});")
 
+    def pan_to(self, lat: float, lon: float) -> None:
+        self.view.page().runJavaScript(f"panTo({lat}, {lon});")
+
     def set_origin_marker(self, lat: float, lon: float) -> None:
         self.view.page().runJavaScript(f"setOriginMarker({lat}, {lon});")
 
