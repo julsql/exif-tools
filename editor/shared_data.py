@@ -43,6 +43,7 @@ class StyleData:
         "french": "Utiliser une carte française",
         "international": "Utiliser une carte internationale"
     }
+    EXTENSIONS_LIST = [".jpg", ".jpeg", ".png", ".gif"]
 
     SPECIE_SWITCH_LABEL = {
         True: "Désactiver la reconnaissance d'espèce",

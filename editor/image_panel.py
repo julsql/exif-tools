@@ -34,8 +34,6 @@ class ImagePanel(QWidget):
     save_as_requested = pyqtSignal()
     autosave_requested = pyqtSignal()
 
-    EXTENSIONS_LIST = [".jpg", ".jpeg", ".png", ".gif"]
-
     def __init__(self, style: StyleData):
         super().__init__()
         self.style = style
@@ -47,7 +45,6 @@ class ImagePanel(QWidget):
         self.pil_image: Optional[Image.Image] = None
 
         self._build_ui()
-        self.setAcceptDrops(True)
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -204,7 +201,7 @@ class ImagePanel(QWidget):
         images = [
             os.path.join(folder, f)
             for f in os.listdir(folder)
-            if os.path.splitext(f)[1].lower() in self.EXTENSIONS_LIST
+            if os.path.splitext(f)[1].lower() in StyleData.EXTENSIONS_LIST
         ]
         images.sort(key=lambda x: os.path.getctime(x))
         self.image_list = images
@@ -237,18 +234,6 @@ class ImagePanel(QWidget):
         self.image_label.setPixmap(QPixmap())
         self._set_image_visible(False)
         self.image_closed.emit()
-
-    def dragEnterEvent(self, event) -> None:
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-
-    def dropEvent(self, event) -> None:
-        urls = event.mimeData().urls()
-        if not urls:
-            return
-        file_path = urls[0].toLocalFile()
-        if os.path.isfile(file_path) and os.path.splitext(file_path)[1].lower() in self.EXTENSIONS_LIST:
-            self.load_from_path(file_path)
 
     def next_image(self) -> None:
         self.autosave_requested.emit()

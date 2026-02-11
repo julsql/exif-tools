@@ -91,9 +91,23 @@ class MainWindow(QMainWindow):
         self.image_panel.save_requested.connect(lambda: self.image_panel.save(self.metadata_panel.get_editable_values))
         self.image_panel.save_as_requested.connect(lambda: self.image_panel.save_as(self.metadata_panel.get_editable_values))
         self.image_panel.autosave_requested.connect(lambda: self.image_panel.autosave(self.metadata_panel.get_editable_values))
+        self.map_panel.file_dropped.connect(self.dropEvent)
 
         self.map_panel.coords_picked.connect(self._on_map_coords_picked)
         self.metadata_panel.metadata_changed.connect(self._on_metadata_changed)
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event) -> None:
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event) -> None:
+        urls = event.mimeData().urls()
+        if not urls:
+            return
+        file_path = urls[0].toLocalFile()
+        if os.path.isfile(file_path) and os.path.splitext(file_path)[1].lower() in StyleData.EXTENSIONS_LIST:
+            self.image_panel.load_from_path(file_path)
 
     def apply_style(self) -> None:
         self.setStyleSheet(f"QMainWindow {{ background: {self.style_data.BG_COLOR}; }}")
