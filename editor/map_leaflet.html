@@ -134,6 +134,11 @@
       map.setView([lat, lon], zoom);
     }
 
+    function panTo(lat, lon) {
+      if (!map || typeof L === "undefined") return;
+      map.panTo([lat, lon]);
+    }
+
     function setOriginMarker(lat, lon) {
       if (!map || typeof L === "undefined") return;
       if (originMarker) map.removeLayer(originMarker);

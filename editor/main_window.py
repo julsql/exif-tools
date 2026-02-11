@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
             self._origin_coords = (lat, lon)  # NEW: origine
             self.map_panel.clear_markers()
             self.map_panel.set_origin_marker(lat, lon)
-            self.map_panel.set_view(lat, lon, int(self.config.get("zoom", self.map_panel.DEFAULT_ZOOM)))
+            self.map_panel.pan_to(lat, lon)
         else:
             self._origin_coords = None
             self.map_panel.clear_markers()
