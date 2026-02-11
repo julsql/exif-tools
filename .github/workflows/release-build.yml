@@ -35,7 +35,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.os == 'windows-latest' && '3.11' || '3.12' }}
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -168,14 +168,12 @@ jobs:
         run: |
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
           rm -rf build/
-          rm -rf .git/
           RELEASE_DIR=release
           mkdir -p $RELEASE_DIR
           mkdir -p out
           mv dist/ExifTools $RELEASE_DIR/
           cp assets/icon.png $RELEASE_DIR/exiftools.png
           tar czf out/ExifTools-${{ github.event.release.tag_name }}-linux-x86_64.tar.gz -C $RELEASE_DIR .
-          ls -lh out/ExifTools-${{ github.event.release.tag_name }}-linux-x86_64.tar.gz
 
       # ---------------- Upload release assets ----------------
       - name: Upload artifacts to Release

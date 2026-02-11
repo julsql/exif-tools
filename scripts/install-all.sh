@@ -31,12 +31,6 @@ sudo apt install python3-pip -y
 echo "📦 Installation de python3-venv..."
 sudo apt install python3-venv -y
 
-echo "📦 (Double vérification) Installation de python3-venv..."
-sudo apt install python3-venv -y
-
-echo "📦 Installation de python3-tk..."
-sudo apt install python3-tk -y
-
 echo "⬇️ Clonage du dépôt exif-tools..."
 if [[ -f "./$VERSION.zip" ]]; then
   rm "./$VERSION.zip"
@@ -97,7 +91,7 @@ fi
 # === Copie de l'exécutable ===
 echo "📄 Copie de l'exécutable vers $EXEC_DEST_PATH"
 cp -r "$EXEC_SRC_PATH" "$EXEC_DEST_PATH"
-chmod +x "$EXEC_DEST_PATH/ExifTools"
+chmod +x "$EXEC_DEST_PATH"
 
 # === Téléchargement de l'icône ===
 echo "🖼️ Téléchargement de l'icône..."

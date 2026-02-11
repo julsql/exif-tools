@@ -13,7 +13,7 @@ APP_COMMENT="Outil de gestion des métadonnées EXIF"
 
 APP_DIR="$HOME/.exiftools"
 EXEC_NAME="ExifTools-$VERSION-linux-x86_64"
-EXEC_DEST_PATH="$HOME/.exiftools"
+EXEC_DEST_PATH="$APP_DIR/ExifTools"
 EXEC_SRC_PATH="https://github.com/julsql/exif-tools/releases/download/$VERSION/$EXEC_NAME.tar.gz"
 ICON_DEST_PATH="$HOME/.local/share/icons/exiftools.png"
 DESKTOP_FILE="$HOME/.local/share/applications/exiftools.desktop"
@@ -28,15 +28,12 @@ mkdir -p "$APP_DIR"
 mkdir -p "$MODEL_DIR"
 mkdir -p "$HOME/.local/share/icons"
 mkdir -p "$HOME/.local/share/applications"
-mkdir -p "$EXEC_DEST_PATH"
-mkdir -p "$EXEC_DEST_PATH/$EXEC_NAME"
 
 # === Téléchargement de l'exécutable ===
 echo "⬇️ Téléchargement de l'exécutable vers $EXEC_DEST_PATH"
-wget -O "$EXEC_DEST_PATH/$EXEC_NAME.tar.gz" "$EXEC_SRC_PATH"
-tar -xf "$EXEC_DEST_PATH/$EXEC_NAME.tar.gz" -C "$EXEC_DEST_PATH/$EXEC_NAME"
-mv "$EXEC_DEST_PATH/$EXEC_NAME/ExifTools/ExifTools" "$APP_DIR/ExifTools"
-chmod +x "$APP_DIR/ExifTools"
+wget -O "$APP_DIR/$EXEC_NAME.tar.gz" "$EXEC_SRC_PATH"
+tar -xf "$APP_DIR/$EXEC_NAME.tar.gz" -C "$APP_DIR"
+chmod +x "$EXEC_DEST_PATH"
 
 # === Téléchargement du modèle ===
 if [[ ! -f "$MODEL_PATH" ]]; then
@@ -48,11 +45,9 @@ fi
 
 # === Déplacement de l'icône ===
 echo "🖼️ Téléchargement de l'icône vers $ICON_DEST_PATH"
-mv "$EXEC_DEST_PATH/$EXEC_NAME/exiftools.png" "$ICON_DEST_PATH"
+mv "$APP_DIR/exiftools.png" "$ICON_DEST_PATH"
 
-rm "$EXEC_DEST_PATH/$EXEC_NAME.tar.gz"
-rmdir "$EXEC_DEST_PATH/$EXEC_NAME/ExifTools"
-rmdir "$EXEC_DEST_PATH/$EXEC_NAME"
+rm "$APP_DIR/$EXEC_NAME.tar.gz"
 
 # === Création du fichier .desktop ===
 echo "📝 Création du fichier .desktop pour l'application..."
