@@ -25,7 +25,7 @@ class InferenceWorker(threading.Thread):
                 self.transform
             )
 
-            self.queue.put(("inference_done", specie))
+            self.queue.put(("inference_done", (specie, self.image_path)))
 
         except Exception as e:
             self.queue.put(("inference_error", str(e)))
