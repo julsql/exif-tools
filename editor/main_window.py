@@ -90,6 +90,7 @@ class MainWindow(QMainWindow):
         self.image_panel.request_find_specie.connect(self._maybe_get_specie)
         self.image_panel.save_requested.connect(lambda: self.image_panel.save(self.metadata_panel.get_editable_values))
         self.image_panel.save_as_requested.connect(lambda: self.image_panel.save_as(self.metadata_panel.get_editable_values))
+        self.image_panel.autosave_requested.connect(lambda: self.image_panel.autosave(self.metadata_panel.get_editable_values))
 
         self.map_panel.coords_picked.connect(self._on_map_coords_picked)
         self.metadata_panel.metadata_changed.connect(self._on_metadata_changed)
