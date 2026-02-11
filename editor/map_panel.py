@@ -5,10 +5,10 @@ import json
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
-from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, QUrl
+from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, QUrl, QEvent
 from PyQt6.QtWebChannel import QWebChannel
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineSettings
+from PyQt6.QtWebEngineCore import QWebEngineSettings
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
 
 from editor import resource_path
@@ -49,6 +49,7 @@ class MapPanel(QWidget):
     DEFAULT_ZOOM = 5
 
     coords_picked = pyqtSignal(float, float)
+    file_dropped = pyqtSignal(QEvent)
 
     def __init__(self, style: StyleData, config: ConfigManager):
         super().__init__()
@@ -77,6 +78,7 @@ class MapPanel(QWidget):
         }
 
         self.view = QWebEngineView(self)
+        self.view.installEventFilter(self)
 
         settings = self.view.settings()
         settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, True)
@@ -102,6 +104,19 @@ class MapPanel(QWidget):
         self.bridge.stateChanged.connect(self._on_state_changed)
 
         self.setStyleSheet(f"background: {self.style.BG_COLOR};")
+
+    def eventFilter(self, obj, event):
+        if obj is self.view:
+            if event.type() == QEvent.Type.DragEnter:
+                if event.mimeData().hasUrls():
+                    event.acceptProposedAction()
+                    return True
+            if event.type() == QEvent.Type.Drop:
+                self.file_dropped.emit(event)
+                event.acceptProposedAction()
+                return True
+
+        return super().eventFilter(obj, event)
 
     def _on_load_finished(self, ok: bool) -> None:
         # Par défaut: pas d'image ouverte => picking désactivé
