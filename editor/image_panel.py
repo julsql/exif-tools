@@ -32,6 +32,7 @@ class ImagePanel(QWidget):
     request_find_specie = pyqtSignal()
     save_requested = pyqtSignal()
     save_as_requested = pyqtSignal()
+    autosave_requested = pyqtSignal()
 
     EXTENSIONS_LIST = [".jpg", ".jpeg", ".png", ".gif"]
 
@@ -250,6 +251,7 @@ class ImagePanel(QWidget):
             self.load_from_path(file_path)
 
     def next_image(self) -> None:
+        self.autosave_requested.emit()
         if not self.image_list or self.current_index < 0:
             return
         self.current_index = (self.current_index + 1) % len(self.image_list)
@@ -257,6 +259,7 @@ class ImagePanel(QWidget):
         self.load_image()
 
     def prev_image(self) -> None:
+        self.autosave_requested.emit()
         if not self.image_list or self.current_index < 0:
             return
         self.current_index = (self.current_index - 1) % len(self.image_list)
@@ -264,60 +267,49 @@ class ImagePanel(QWidget):
         self.load_image()
 
     def save(self, get_values_callable) -> None:
-        if not (self.image_path and self.pil_image):
-            return
-        if get_values_callable is None:
-            return
+        self.autosave(get_values_callable)
+        self.load_image()
 
+    def save_as(self, get_values_callable) -> None:
+        if self._can_save(get_values_callable):
+            base = os.path.basename(self.image_path)
+            filename, ext = os.path.splitext(base)
+
+            new_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Enregistrer l'image sous...",
+                f"{filename}-copy{ext}",
+                "Images (*.jpg *.jpeg *.png *.gif);;Tous types (*.*)",
+            )
+            if not new_path:
+                return
+
+            shutil.copy2(self.image_path, new_path)
+            self._save(get_values_callable, new_path, new_path)
+
+    def autosave(self, get_values_callable) -> None:
+        if self._can_save(get_values_callable):
+            final_path = self._save(get_values_callable, self.image_path, None)
+
+            if final_path and final_path != self.image_path:
+                self.image_path = final_path
+                if 0 <= self.current_index < len(self.image_list):
+                    self.image_list[self.current_index] = final_path
+
+    def _can_save(self, get_values_callable) -> bool:
+        if not (self.image_path and self.pil_image):
+            return False
+        if get_values_callable is None:
+            return False
+        return True
+
+    def _save(self, get_values_callable, path: str, new_path) -> None | str:
         vals = get_values_callable()
 
         try:
             final_path = self.exif_service.save_exif_and_rename(
                 self.pil_image,
-                self.image_path,
-                vals.get("nom", ""),
-                vals.get("date_creation", ""),
-                vals.get("latitude", ""),
-                vals.get("longitude", ""),
-                new_path=None,
-            )
-        except Exception:
-            Toast(self.window(), self.style, "Problème avec la sauvegarde")
-            return
-
-        if final_path and final_path != self.image_path:
-            self.image_path = final_path
-            if 0 <= self.current_index < len(self.image_list):
-                self.image_list[self.current_index] = final_path
-
-        Toast(self.window(), self.style, "Image sauvegardée avec succès")
-        self.load_image()
-
-    def save_as(self, get_values_callable) -> None:
-        if not (self.image_path and self.pil_image):
-            return
-        if get_values_callable is None:
-            return
-
-        base = os.path.basename(self.image_path)
-        filename, ext = os.path.splitext(base)
-
-        new_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Enregistrer l'image sous...",
-            f"{filename}-copy{ext}",
-            "Images (*.jpg *.jpeg *.png *.gif);;Tous types (*.*)",
-        )
-        if not new_path:
-            return
-
-        shutil.copy2(self.image_path, new_path)
-        vals = get_values_callable()
-
-        try:
-            _ = self.exif_service.save_exif_and_rename(
-                self.pil_image,
-                new_path,
+                path,
                 vals.get("nom", ""),
                 vals.get("date_creation", ""),
                 vals.get("latitude", ""),
@@ -327,5 +319,5 @@ class ImagePanel(QWidget):
         except Exception:
             Toast(self.window(), self.style, "Problème avec la sauvegarde")
             return
-
         Toast(self.window(), self.style, "Image sauvegardée avec succès")
+        return final_path
