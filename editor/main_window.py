@@ -130,8 +130,6 @@ class MainWindow(QMainWindow):
             self._origin_coords = None
             self.map_panel.clear_markers()
 
-        self._maybe_get_specie()
-
     def _on_image_closed(self) -> None:
         self.setWindowTitle(self.DEFAULT_APP_TITLE)
         self.metadata_panel.clear_all()
