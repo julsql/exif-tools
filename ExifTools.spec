@@ -1,3 +1,7 @@
+# python
+# -*- mode: python ; coding: utf-8 -*-
+import os
+
 from PyInstaller.utils.hooks import collect_all, collect_submodules
 
 block_cipher = None
@@ -7,14 +11,13 @@ datas = [
     ('editor/map_leaflet.html', 'editor'),
 ]
 binaries = []
-hiddenimports = [
-        'PyQt5.QtCore',
-        'PyQt5.QtGui',
-        'PyQt5.QtWidgets',
-        'PyQt5.QtWebEngineCore',
-        'PyQt5.QtWebEngineWidgets',
-        'PyQt5.QtWebChannel',
-    ]
+hiddenimports = []
+
+for pkg in ("birder", "torch", "torchvision"):
+    tmp = collect_all(pkg)
+    datas += tmp[0]
+    binaries += tmp[1]
+    hiddenimports += tmp[2]
 
 hiddenimports += collect_submodules("PyQt6")
 hiddenimports += collect_submodules("PyQt6.QtWebEngineCore")
@@ -23,12 +26,6 @@ hiddenimports += collect_submodules("PyQt6.QtWebChannel")
 hiddenimports += ["PyQt6.sip"]
 hiddenimports += ["onnxscript.ir"]
 
-for pkg in ("birder", "torch", "torchvision"):
-    tmp = collect_all(pkg)
-    datas += tmp[0]
-    binaries += tmp[1]
-    hiddenimports += tmp[2]
-
 import sys
 if sys.platform.startswith("win"):
     excludes = ["onnxscript", "onnx", "torch", "torchvision"]
@@ -36,40 +33,53 @@ else:
     excludes = []
 
 a = Analysis(
-    ['main.py'],
-    pathex=['.'],
+    ["main.py"],
+    pathex=[],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
+    hooksconfig={},
     runtime_hooks=[],
     excludes=excludes,
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
-    noarchive=False
+    noarchive=False,
+    optimize=0,
 )
 
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
+
+version_file = os.path.join("build", "version_info.txt")
+exe_kwargs = {}
+if os.path.exists(version_file):
+    exe_kwargs["version"] = version_file
 
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
-    name='ExifTools',
+    exclude_binaries=True,
+    name="ExifTools",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    runtime_tmpdir=None,
     console=False,
-    icon="assets/icon.icns",
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    **exe_kwargs,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    name="ExifTools",
 )
 
 app = BUNDLE(
-    exe,
+    coll,
     name="ExifTools.app",
     icon="assets/icon.icns",
     bundle_identifier="com.julsql.exiftools",
