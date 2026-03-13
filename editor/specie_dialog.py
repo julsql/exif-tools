@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QHBoxLayout, QPushButt
 
 
 class SpecieDialog(QDialog):
-    def __init__(self, parent, specie: str, url: str | None):
+    def __init__(self, parent, specie: str, url: str | None, already_set: bool = False):
         super().__init__(parent)
         self.setWindowTitle("Espèce détectée")
         self.setModal(True)
@@ -32,6 +32,11 @@ class SpecieDialog(QDialog):
             msg = QLabel(f"L'espèce <b>{specie}</b> a été reconnue.")
             msg.setTextFormat(Qt.TextFormat.RichText)
             layout.addWidget(msg)
+
+        if already_set:
+            msg_already_set = QLabel("Une espèce est déjà présente dans le nom du fichier.<br/>Voulez vous remplacer le nom ?")
+            msg_already_set.setTextFormat(Qt.TextFormat.RichText)
+            layout.addWidget(msg_already_set)
 
         btns = QHBoxLayout()
         btns.addStretch(1)

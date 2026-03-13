@@ -130,3 +130,7 @@ def get_date_taken(image: Image.Image, exif_date_format: str, displayed_date_for
             continue
 
     return None
+
+def has_specie(name: str) -> bool:
+    parts = (name or "").split(" ")
+    return len(parts) > 2 and parts[0][:1].isupper() and parts[1][:1].islower()

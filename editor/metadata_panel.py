@@ -24,7 +24,7 @@ from editor.exif_utils import (
     get_device,
     get_date_taken,
     get_date_modify,
-    get_coordinates,
+    get_coordinates, has_specie,
 )
 
 
@@ -294,5 +294,8 @@ class MetadataPanel(QWidget):
 
     def set_name_prefix(self, prefix: str) -> None:
         current = self.entries["nom"].text().strip()
-        new_value = f"{prefix} {current}".strip()
+        if has_specie(current):
+            new_value = f"{prefix} {' '.join(current.split(" ")[2:])}".strip()
+        else:
+            new_value = f"{prefix} {current}".strip()
         self.entries["nom"].setText(new_value)

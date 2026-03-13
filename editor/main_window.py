@@ -13,6 +13,8 @@ from PyQt6.QtWidgets import (
 
 from editor import resource_path
 from editor.config_manager import ConfigManager
+from editor.exif_utils import has_specie
+from editor.info_dialog import InfoDialog
 from editor.shared_data import StyleData
 from editor.image_panel import ImagePanel
 from editor.metadata_panel import MetadataPanel
@@ -453,10 +455,6 @@ class MainWindow(QMainWindow):
         if not self.model_service.is_ready():
             return
 
-        name_field = self.metadata_panel.entries["nom"].text()
-        if self._has_specie(name_field):
-            return
-
         coords = self.metadata_panel.get_coordinates()
         lat, lon = (None, None)
         if coords:
@@ -493,18 +491,16 @@ class MainWindow(QMainWindow):
 
     def _on_specie_detected(self, payload: tuple) -> None:
         (specie, path) = payload
-        if not specie:
-            return
         if self.image_panel.image_path != path:
             return
+        if not specie or specie == "":
+            InfoDialog(self, "Aucune espèce détectée", "Aucune espèce n'a été reconne.<br/>Essayer de recouper l'image,<br/>ou de mettre une localisation plus précise.").exec()
+            return
+        name_field = self.metadata_panel.entries["nom"].text()
         url = self._get_inat_taxon_link(specie)
-        dlg = SpecieDialog(self, specie, url)
+        dlg = SpecieDialog(self, specie, url, has_specie(name_field))
         if dlg.exec() == QDialog.DialogCode.Accepted:
             self.metadata_panel.set_name_prefix(specie)
-
-    def _has_specie(self, name: str) -> bool:
-        parts = (name or "").split(" ")
-        return len(parts) > 2 and parts[0][:1].isupper() and parts[1][:1].islower()
 
     def _get_inat_taxon_id(self, scientific_name: str) -> str | None:
         url = "https://api.inaturalist.org/v1/taxa"
