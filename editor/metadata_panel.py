@@ -43,7 +43,6 @@ class MetadataPanel(QWidget):
 
     FIELDS = [
         FieldSpec("nom", "Nom", True),
-        FieldSpec("format", "Format", True),
         FieldSpec("poids", "Poids", True),
         FieldSpec("dimensions", "Dimensions (lxH)", True),
         FieldSpec("appareil", "Appareil photo", True),
