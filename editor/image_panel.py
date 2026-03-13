@@ -155,7 +155,7 @@ class ImagePanel(QWidget):
         self.btn_save_as.setIcon(icon("save_as.png"))
         self.btn_open.setIcon(icon("folder_open.png"))
         self.btn_recenter.setIcon(icon("recenter.png"))
-        self.btn_find_specie.setIcon(icon("find_specie.png"))
+        self.set_model_loading(True)
         self.btn_close.setIcon(icon("close.png"))
         self.btn_prev.setIcon(icon("arrow_left.png"))
         self.btn_next.setIcon(icon("arrow_right.png"))
@@ -306,3 +306,18 @@ class ImagePanel(QWidget):
             return
         Toast(self.window(), self.style, "Image sauvegardée avec succès")
         return final_path
+
+    def set_model_loading(self, is_loading: bool) -> None:
+        """Change l'icône du bouton find_specie selon l'état du modèle"""
+
+        def icon(name: str) -> QIcon:
+            return QIcon(resource_path(f"assets/{self.style.MODE}/{name}"))
+
+        if is_loading:
+            self.btn_find_specie.setIcon(icon("loading.gif"))
+            self.btn_find_specie.setEnabled(False)
+            self.btn_find_specie.setToolTip("Chargement du modèle...")
+        else:
+            self.btn_find_specie.setIcon(icon("find_specie.png"))
+            self.btn_find_specie.setEnabled(True)
+            self.btn_find_specie.setToolTip("Recherche l'espèce (Ctrl+F)")

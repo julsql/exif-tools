@@ -478,6 +478,7 @@ class MainWindow(QMainWindow):
             event, payload = self.model_queue.get()
 
             if event == "model_ready":
+                self.image_panel.set_model_loading(False)
                 import birder
                 self.class_mapping = {v: k for k, v in self.model_service.model_info.class_to_idx.items()}
                 size = birder.get_size_from_signature(self.model_service.model_info.signature)
