@@ -42,7 +42,7 @@ class MetadataPanel(QWidget):
     WARNING_MESSAGE = "⚠️ Attention : "
 
     FIELDS = [
-        FieldSpec("nom", "Nom", True),
+        FieldSpec("nom", "Nom", False),
         FieldSpec("poids", "Poids", True),
         FieldSpec("dimensions", "Dimensions (lxH)", True),
         FieldSpec("appareil", "Appareil photo", True),
