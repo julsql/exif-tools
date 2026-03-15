@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
 from PIL import Image, ImageOps
 
 from editor import resource_path
+from editor.config_manager import ConfigManager
 from editor.shared_data import StyleData
 from editor.exif_editor_service import ExifEditorService
 from editor.toast import Toast
@@ -36,8 +37,11 @@ class ImagePanel(QWidget):
 
     def __init__(self, style: StyleData):
         super().__init__()
+        self.style_data = StyleData()
         self.style = style
         self.exif_service = ExifEditorService(style)
+        self.config = ConfigManager()
+        self.config.load()
 
         self.image_list: List[str] = []
         self.current_index: int = -1
@@ -310,10 +314,16 @@ class ImagePanel(QWidget):
     def set_model_loading(self, is_loading: bool) -> None:
         """Change l'icône du bouton find_specie selon l'état du modèle"""
 
+        self.config.load()
         def icon(name: str) -> QIcon:
             return QIcon(resource_path(f"assets/{self.style.MODE}/{name}"))
 
-        if is_loading:
+        recognition = self.config.get("recognition", self.style_data.DEFAULT_SPECIE)
+        if not recognition:
+            self.btn_find_specie.setIcon(icon("close.png"))
+            self.btn_find_specie.setEnabled(False)
+            self.btn_find_specie.setToolTip("Détection désactivée")
+        elif is_loading:
             self.btn_find_specie.setIcon(icon("loading.gif"))
             self.btn_find_specie.setEnabled(False)
             self.btn_find_specie.setToolTip("Chargement du modèle...")

@@ -342,6 +342,7 @@ class MainWindow(QMainWindow):
         self.config.set("recognition", not recog)
         self.config.save()
         self._refresh_switch_labels()
+        self.image_panel.set_model_loading(False)
 
         # si on réactive, on relance une détection si possible
         self._maybe_get_specie()
