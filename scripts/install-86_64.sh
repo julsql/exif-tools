@@ -5,7 +5,7 @@ trap 'echo "❌ Une erreur est survenue. Installation interrompue."' ERR
 
 echo "🚀 Lancement de l'installation de l'application (version arm64)..."
 
-VERSION="2.0.4"
+VERSION="2.0.5"
 
 # === Variables personnalisables ===
 APP_NAME="Éditeur Exif"
