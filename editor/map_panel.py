@@ -8,7 +8,10 @@ from typing import Optional, Tuple
 from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, QUrl, QEvent
 from PyQt6.QtWebChannel import QWebChannel
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWebEngineCore import QWebEngineSettings
+from PyQt6.QtWebEngineCore import (
+    QWebEngineSettings,
+    QWebEngineUrlRequestInterceptor,
+)
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
 
 from editor import resource_path
@@ -21,6 +24,21 @@ class MapState:
     lat: float
     lon: float
     zoom: int
+
+
+class _TileRequestInterceptor(QWebEngineUrlRequestInterceptor):
+    _TILE_HOSTS = ("tile.openstreetmap.org", "tile.openstreetmap.fr")
+
+    def __init__(self, referer: str, user_agent: str):
+        super().__init__()
+        self._referer = referer
+        self._user_agent = user_agent
+
+    def interceptRequest(self, info) -> None:
+        host = info.requestUrl().host()
+        if any(host.endswith(h) for h in self._TILE_HOSTS):
+            info.setHttpHeader(b"Referer", self._referer.encode("utf-8"))
+            info.setHttpHeader(b"User-Agent", self._user_agent.encode("utf-8"))
 
 
 class _Bridge(QObject):
@@ -85,6 +103,16 @@ class MapPanel(QWidget):
         settings.setAttribute(QWebEngineSettings.WebAttribute.AutoLoadImages, True)
         settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
         settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True)
+
+        profile = self.view.page().profile()
+        from editor.app import VERSION
+        user_agent = f"exif_tools/{VERSION} (+https://github.com/juliettedebono/exif_tools)"
+        profile.setHttpUserAgent(user_agent)
+        self._tile_interceptor = _TileRequestInterceptor(
+            referer="https://github.com/juliettedebono/exif_tools",
+            user_agent=user_agent,
+        )
+        profile.setUrlRequestInterceptor(self._tile_interceptor)
 
         self.channel = QWebChannel(self.view.page())
         self.bridge = _Bridge(init_params)
