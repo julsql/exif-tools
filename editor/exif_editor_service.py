@@ -105,10 +105,28 @@ class ExifEditorService:
         return piexif.dump(exif_dict)
 
     def _clean_metadata(self, exif_dict):
-        for _, ifd in exif_dict.items():
+        for ifd_name, ifd in exif_dict.items():
             if not isinstance(ifd, dict):
                 continue
+            tag_specs = piexif.TAGS.get(ifd_name, {})
             for tag, value in list(ifd.items()):
+                spec = tag_specs.get(tag)
+                expected_type = spec.get("type") if spec else None
+
+                if expected_type == piexif.TYPES.Undefined and not isinstance(value, bytes):
+                    if isinstance(value, (tuple, list)):
+                        try:
+                            ifd[tag] = bytes(int(v) & 0xFF for v in value)
+                        except (TypeError, ValueError):
+                            ifd.pop(tag, None)
+                    elif isinstance(value, str):
+                        ifd[tag] = value.encode("utf-8", errors="replace")
+                    elif isinstance(value, int):
+                        ifd[tag] = bytes([value & 0xFF])
+                    else:
+                        ifd.pop(tag, None)
+                    continue
+
                 if isinstance(value, int):
                     ifd[tag] = (value, 1)
                 elif isinstance(value, tuple) and len(value) == 1:

@@ -305,7 +305,8 @@ class ImagePanel(QWidget):
                 vals.get("longitude", ""),
                 new_path=new_path,
             )
-        except Exception:
+        except Exception as e:
+            print(str(e))
             Toast(self.window(), self.style, "Problème avec la sauvegarde")
             return
         Toast(self.window(), self.style, "Image sauvegardée avec succès")
