@@ -40,8 +40,8 @@ class StyleData:
     MAPS = {"french": "https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
             "international": "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"}
     MAPS_SWITCH_LABEL = {
-        "french": "Utiliser une carte française",
-        "international": "Utiliser une carte internationale"
+        "french": "Utiliser une carte internationale",
+        "international": "Utiliser une carte française"
     }
     EXTENSIONS_LIST = [".jpg", ".jpeg", ".png", ".gif"]
 
