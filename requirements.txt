@@ -34,7 +34,7 @@ polars-runtime-32==1.38.0
 protobuf==6.33.5
 pyarrow==23.0.0
 pycocotools==2.0.11
-Pygments==2.19.2
+Pygments==2.20.0
 pyparsing==3.3.2
 PyQt6==6.10.2
 PyQt6-Qt6==6.10.2
