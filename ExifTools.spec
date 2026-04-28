@@ -26,11 +26,7 @@ hiddenimports += collect_submodules("PyQt6.QtWebChannel")
 hiddenimports += ["PyQt6.sip"]
 hiddenimports += ["onnxscript.ir"]
 
-import sys
-if sys.platform.startswith("win"):
-    excludes = ["onnxscript", "onnx", "torch", "torchvision"]
-else:
-    excludes = []
+excludes = []
 
 a = Analysis(
     ["main.py"],
