@@ -59,6 +59,6 @@ torchmetrics==1.8.2
 torchvision==0.25.0
 tqdm==4.67.3
 typing_extensions==4.15.0
-urllib3==2.6.3
+urllib3==2.7.0
 webdataset==1.0.2
 Werkzeug==3.1.6
