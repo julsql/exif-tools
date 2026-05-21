@@ -9,7 +9,7 @@ filelock==3.20.3
 fonttools==4.61.1
 fsspec==2026.2.0
 grpcio==1.76.0
-idna==3.11
+idna==3.15
 Jinja2==3.1.6
 joblib==1.5.3
 kiwisolver==1.4.9
