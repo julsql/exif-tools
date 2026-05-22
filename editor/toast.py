@@ -63,10 +63,14 @@ class Toast(QWidget):
         QTimer.singleShot(duration_ms, self._fade_out.start)
 
     def _position_near_top(self, parent: QWidget) -> None:
-        parent_rect = parent.geometry()
         self.adjustSize()
         w = self.width()
         h = self.height()
-        x = parent_rect.x() + (parent_rect.width() - w) // 2
-        y = parent_rect.y() + 20
+        # On convertit le coin supérieur gauche de la zone client du parent en
+        # coordonnées écran. mapToGlobal est fiable sur X11 comme sur macOS,
+        # contrairement à geometry() dont la prise en compte des décorations de
+        # fenêtre diffère selon la plateforme.
+        top_left = parent.mapToGlobal(parent.rect().topLeft())
+        x = top_left.x() + (parent.width() - w) // 2
+        y = top_left.y() + 20
         self.setGeometry(x, y, w, h)
