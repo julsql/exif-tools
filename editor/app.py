@@ -22,11 +22,13 @@ def check_update_qt(parent=None) -> None:
 
         latest_release = response.json()
         latest_version = latest_release["tag_name"].lstrip("v")
+        changelog = latest_release.get("body", "") or ""
         changelog = re.sub(
             r" \([0-9a-f]{40}( & [0-9a-f]{40})*\)",
             "",
-            (latest_release.get("body", "") or ""),
+            changelog,
         )
+        changelog = re.sub(r"<img\b[^>]*/?>", "", changelog, flags=re.IGNORECASE)
 
         if version.parse(latest_version) > version.parse(VERSION):
             QMessageBox.information(
