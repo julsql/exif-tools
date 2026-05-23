@@ -6,7 +6,7 @@ import shutil
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPixmap, QIcon, QImage
+from PyQt6.QtGui import QPixmap, QIcon, QImage, QMovie
 from PyQt6.QtWidgets import (
     QWidget,
     QLabel,
@@ -47,6 +47,10 @@ class ImagePanel(QWidget):
         self.current_index: int = -1
         self.image_path: Optional[str] = None
         self.pil_image: Optional[Image.Image] = None
+
+        self._model_loading: bool = True
+        self._searching: bool = False
+        self._loading_movie: Optional[QMovie] = None
 
         self._build_ui()
 
@@ -314,21 +318,52 @@ class ImagePanel(QWidget):
 
     def set_model_loading(self, is_loading: bool) -> None:
         """Change l'icône du bouton find_specie selon l'état du modèle"""
+        self._model_loading = is_loading
+        self._update_find_specie_button()
 
+    def set_searching(self, is_searching: bool) -> None:
+        """Indique qu'une inférence d'espèce est en cours."""
+        self._searching = is_searching
+        self._update_find_specie_button()
+
+    def _update_find_specie_button(self) -> None:
         self.config.load()
+
         def icon(name: str) -> QIcon:
             return QIcon(resource_path(f"assets/{self.style.MODE}/{name}"))
 
         recognition = self.config.get("recognition", self.style_data.DEFAULT_SPECIE)
         if not recognition:
+            self._stop_loading_animation()
             self.btn_find_specie.setIcon(icon("close.png"))
             self.btn_find_specie.setEnabled(False)
             self.btn_find_specie.setToolTip("Détection désactivée")
-        elif is_loading:
-            self.btn_find_specie.setIcon(icon("loading.gif"))
+        elif self._model_loading:
+            self._start_loading_animation()
             self.btn_find_specie.setEnabled(False)
             self.btn_find_specie.setToolTip("Chargement du modèle...")
+        elif self._searching:
+            self._start_loading_animation()
+            self.btn_find_specie.setEnabled(False)
+            self.btn_find_specie.setToolTip("Recherche en cours...")
         else:
+            self._stop_loading_animation()
             self.btn_find_specie.setIcon(icon("find_specie.png"))
             self.btn_find_specie.setEnabled(True)
             self.btn_find_specie.setToolTip("Recherche l'espèce (Ctrl+F)")
+
+    def _start_loading_animation(self) -> None:
+        if self._loading_movie is None:
+            self._loading_movie = QMovie(resource_path(f"assets/{self.style.MODE}/loading.gif"))
+            self._loading_movie.frameChanged.connect(self._on_loading_frame)
+        if self._loading_movie.state() != QMovie.MovieState.Running:
+            self._loading_movie.start()
+
+    def _stop_loading_animation(self) -> None:
+        if self._loading_movie is not None and self._loading_movie.state() == QMovie.MovieState.Running:
+            self._loading_movie.stop()
+
+    def _on_loading_frame(self) -> None:
+        if self._loading_movie is None:
+            return
+        self.btn_find_specie.setIcon(QIcon(self._loading_movie.currentPixmap()))

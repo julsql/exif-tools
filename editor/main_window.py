@@ -470,6 +470,7 @@ class MainWindow(QMainWindow):
             self.class_mapping,
             self.transform,
         )
+        self.image_panel.set_searching(True)
         worker.start()
 
     def check_model_queue(self) -> None:
@@ -484,9 +485,12 @@ class MainWindow(QMainWindow):
                 self.transform = birder.classification_transform(size, self.model_service.model_info.rgb_stats)
 
             elif event == "inference_done":
+                self.image_panel.set_searching(False)
                 self._on_specie_detected(payload)
 
             elif event in ("model_error", "inference_error"):
+                if event == "inference_error":
+                    self.image_panel.set_searching(False)
                 # On log, UX: silencieux comme avant (tu peux aussi ajouter un toast Qt ici)
                 print(payload)
 
