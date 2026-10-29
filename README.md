@@ -21,9 +21,12 @@ Application pour visualiser et modifier les exif d'une photo.
 Pour lancer l'application, lancer dans un terminal :
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt       # édition full (avec reconnaissance d'espèce par IA)
+pip install -r requirements-lite.txt  # édition lite (sans IA, légère)
 python3 main.py
 ```
+
+L'IA est détectée au lancement : sans `torch`/`birder`, la reconnaissance d'espèce est masquée.
 
 Pour incrémenter de version, modifier le fichier `version.txt` et lancer
 
@@ -39,7 +42,8 @@ Dans une machine linux (ou VM)
 
 ```bash
 pip install pyinstaller
-pyinstaller --noconfirm --clean ExifTools.spec
+pyinstaller --noconfirm --clean ExifTools.spec                          # full
+EXIFTOOLS_EDITION=lite pyinstaller --noconfirm --clean ExifTools.spec   # lite
 ```
 
 ### Faire l'application linux
