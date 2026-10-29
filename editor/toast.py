@@ -9,14 +9,12 @@ from editor.shared_data import StyleData
 
 class Toast(QWidget):
     def __init__(self, parent: QWidget, style: StyleData, message: str, duration_ms: int = 2000):
+        # Widget enfant superposé (et non fenêtre Tool) : sous Linux, une fenêtre
+        # native capte les clics malgré WA_TransparentForMouseEvents et masque
+        # les boutons situés dessous.
         super().__init__(parent)
-        self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint
-            | Qt.WindowType.Tool
-            | Qt.WindowType.WindowStaysOnTopHint
-        )
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
-        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         self.effect = QGraphicsOpacityEffect(self)
         self.setGraphicsEffect(self.effect)
@@ -59,6 +57,7 @@ class Toast(QWidget):
         self._position_near_top(parent)
 
         self.show()
+        self.raise_()
         self._fade_in.start()
         QTimer.singleShot(duration_ms, self._fade_out.start)
 
@@ -66,11 +65,8 @@ class Toast(QWidget):
         self.adjustSize()
         w = self.width()
         h = self.height()
-        # On convertit le coin supérieur gauche de la zone client du parent en
-        # coordonnées écran. mapToGlobal est fiable sur X11 comme sur macOS,
-        # contrairement à geometry() dont la prise en compte des décorations de
-        # fenêtre diffère selon la plateforme.
-        top_left = parent.mapToGlobal(parent.rect().topLeft())
-        x = top_left.x() + (parent.width() - w) // 2
-        y = top_left.y() + 20
+        # Coordonnées relatives au parent : pas de dépendance au gestionnaire
+        # de fenêtres (X11, Wayland, macOS).
+        x = (parent.width() - w) // 2
+        y = 20
         self.setGeometry(x, y, w, h)
