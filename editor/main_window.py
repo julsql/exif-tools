@@ -54,18 +54,11 @@ class MainWindow(QMainWindow):
         self.transform = None
         self._origin_coords: tuple[float, float] | None = None  # NEW
 
-        if AI_AVAILABLE:
-            loader = ModelLoaderThread(self.model_service, self.model_queue)
-            loader.start()
-
         self._build_ui()
         self._build_menu()
+        self._init_specie_recognition()
 
         QTimer.singleShot(0, self.restore_layout)
-        self._poll_timer = QTimer(self)
-        self._poll_timer.setInterval(200)
-        self._poll_timer.timeout.connect(self.check_model_queue)
-        self._poll_timer.start()
 
     def _build_ui(self) -> None:
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
@@ -82,7 +75,6 @@ class MainWindow(QMainWindow):
         self.main_splitter.addWidget(self.map_panel)
 
         self.setCentralWidget(self.main_splitter)
-        self.image_panel.btn_find_specie.setVisible(AI_AVAILABLE)
 
         self.setStyleSheet(f"QMainWindow {{ background: {self.style_data.BG_COLOR}; }}")
         self.apply_style()
@@ -211,7 +203,6 @@ class MainWindow(QMainWindow):
         # Switch reconnaissance espèce (comme avant)
         self.act_switch_recognition = QAction("", self)
         self.act_switch_recognition.triggered.connect(self.switch_specie_recognition)
-        self.act_switch_recognition.setVisible(AI_AVAILABLE)
         menu_fenetre.addAction(self.act_switch_recognition)
 
         self._refresh_switch_labels()
@@ -243,7 +234,7 @@ class MainWindow(QMainWindow):
         act_find = QAction("Recherche l'espèce", self)
         act_find.setShortcut(QKeySequence("Ctrl+F"))
         act_find.triggered.connect(self._maybe_get_specie)
-        act_find.setVisible(AI_AVAILABLE)
+        self.act_find_specie = act_find
 
         act_next = QAction("Image suivante", self)
         act_next.setShortcut(QKeySequence(Qt.Key.Key_Right))
@@ -347,7 +338,7 @@ class MainWindow(QMainWindow):
         self.config.set("recognition", not recog)
         self.config.save()
         self._refresh_switch_labels()
-        self.image_panel.set_model_loading(False)
+        self.image_panel.set_model_loading(self.model_service.loading)
 
         # si on réactive, on relance une détection si possible
         self._maybe_get_specie()
@@ -452,9 +443,29 @@ class MainWindow(QMainWindow):
 
     # ---------- Reconnaissance espèce (threads existants) ----------
 
-    def _maybe_get_specie(self) -> None:
+    def _init_specie_recognition(self) -> None:
+        """Point unique de bascule entre édition lite et full."""
+        for widget in (
+            self.image_panel.btn_find_specie,
+            self.act_find_specie,
+            self.act_switch_recognition,
+        ):
+            widget.setVisible(AI_AVAILABLE)
+
         if not AI_AVAILABLE:
+            # model_service ne sera jamais prêt : _maybe_get_specie reste inopérant
+            self.image_panel.set_model_unavailable()
             return
+
+        self.model_service.loading = True
+        ModelLoaderThread(self.model_service, self.model_queue).start()
+
+        self._poll_timer = QTimer(self)
+        self._poll_timer.setInterval(200)
+        self._poll_timer.timeout.connect(self.check_model_queue)
+        self._poll_timer.start()
+
+    def _maybe_get_specie(self) -> None:
         recog = self.config.get("recognition", self.style_data.DEFAULT_SPECIE)
         if not recog:
             return
@@ -496,7 +507,9 @@ class MainWindow(QMainWindow):
                 self._on_specie_detected(payload)
 
             elif event in ("model_error", "inference_error"):
-                if event == "inference_error":
+                if event == "model_error":
+                    self.image_panel.set_model_unavailable()
+                else:
                     self.image_panel.set_searching(False)
                 # On log, UX: silencieux comme avant (tu peux aussi ajouter un toast Qt ici)
                 print(payload)

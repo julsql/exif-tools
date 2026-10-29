@@ -49,6 +49,7 @@ class ImagePanel(QWidget):
         self.pil_image: Optional[Image.Image] = None
 
         self._model_loading: bool = True
+        self._model_unavailable: bool = False
         self._searching: bool = False
         self._loading_movie: Optional[QMovie] = None
 
@@ -163,7 +164,7 @@ class ImagePanel(QWidget):
         self.btn_save_as.setIcon(icon("save_as.png"))
         self.btn_open.setIcon(icon("folder_open.png"))
         self.btn_recenter.setIcon(icon("recenter.png"))
-        self.set_model_loading(True)
+        self._update_find_specie_button()
         self.btn_close.setIcon(icon("close.png"))
         self.btn_prev.setIcon(icon("arrow_left.png"))
         self.btn_next.setIcon(icon("arrow_right.png"))
@@ -321,6 +322,12 @@ class ImagePanel(QWidget):
         self._model_loading = is_loading
         self._update_find_specie_button()
 
+    def set_model_unavailable(self) -> None:
+        """Modèle absent (édition lite) ou en échec de chargement."""
+        self._model_unavailable = True
+        self._model_loading = False
+        self._update_find_specie_button()
+
     def set_searching(self, is_searching: bool) -> None:
         """Indique qu'une inférence d'espèce est en cours."""
         self._searching = is_searching
@@ -338,6 +345,11 @@ class ImagePanel(QWidget):
             self.btn_find_specie.setIcon(icon("close.png"))
             self.btn_find_specie.setEnabled(False)
             self.btn_find_specie.setToolTip("Détection désactivée")
+        elif self._model_unavailable:
+            self._stop_loading_animation()
+            self.btn_find_specie.setIcon(icon("close.png"))
+            self.btn_find_specie.setEnabled(False)
+            self.btn_find_specie.setToolTip("Modèle indisponible")
         elif self._model_loading:
             self._start_loading_animation()
             self.btn_find_specie.setEnabled(False)
