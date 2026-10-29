@@ -7,6 +7,7 @@ echo "🗑️ Lancement de la désinstallation de l'application ExifTools..."
 
 APP_DIR="$HOME/.exiftools"
 EXEC_DEST_PATH="$APP_DIR/ExifTools"
+APP_INSTALL_DIR="$APP_DIR/app"
 CONFIG_DEST_PATH="$APP_DIR/window_config.json"
 ICON_DEST_PATH="$HOME/.local/share/icons/exiftools.png"
 DESKTOP_FILE="$HOME/.local/share/applications/exiftools.desktop"
@@ -27,10 +28,11 @@ else
   echo "ℹ️ Aucune icône trouvée."
 fi
 
-# === Suppression de l'exécutable ===
-if [[ -f "$EXEC_DEST_PATH" ]]; then
-  echo "🧽 Suppression de l'exécutable..."
-  rm "$EXEC_DEST_PATH"
+# === Suppression de l'application (et de l'ancien exécutable seul) ===
+if [[ -d "$APP_INSTALL_DIR" || -f "$EXEC_DEST_PATH" ]]; then
+  echo "🧽 Suppression de l'application..."
+  rm -rf "$APP_INSTALL_DIR"
+  rm -f "$EXEC_DEST_PATH"
 else
   echo "ℹ️ Aucun exécutable trouvé."
 fi

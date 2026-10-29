@@ -14,6 +14,9 @@ APP_COMMENT="Outil de gestion des métadonnées EXIF"
 APP_DIR="$HOME/.exiftools"
 EXEC_NAME="ExifTools-$VERSION-linux-x86_64"
 EXEC_DEST_PATH="$HOME/.exiftools"
+# Build PyInstaller "onedir" : exécutable + dossier _internal
+APP_INSTALL_DIR="$APP_DIR/app"
+APP_EXEC="$APP_INSTALL_DIR/ExifTools"
 EXEC_SRC_PATH="https://github.com/julsql/exif-tools/releases/download/$VERSION/$EXEC_NAME.tar.gz"
 ICON_DEST_PATH="$HOME/.local/share/icons/exiftools.png"
 DESKTOP_FILE="$HOME/.local/share/applications/exiftools.desktop"
@@ -35,8 +38,13 @@ mkdir -p "$EXEC_DEST_PATH/$EXEC_NAME"
 echo "⬇️ Téléchargement de l'exécutable vers $EXEC_DEST_PATH"
 wget -O "$EXEC_DEST_PATH/$EXEC_NAME.tar.gz" "$EXEC_SRC_PATH"
 tar -xf "$EXEC_DEST_PATH/$EXEC_NAME.tar.gz" -C "$EXEC_DEST_PATH/$EXEC_NAME"
-mv "$EXEC_DEST_PATH/$EXEC_NAME/ExifTools/ExifTools" "$APP_DIR/ExifTools"
-chmod +x "$APP_DIR/ExifTools"
+# Nettoyage d'une installation précédente (dont l'ancien exécutable seul)
+rm -rf "$APP_INSTALL_DIR"
+if [[ -f "$APP_DIR/ExifTools" ]]; then
+  rm "$APP_DIR/ExifTools"
+fi
+mv "$EXEC_DEST_PATH/$EXEC_NAME/ExifTools" "$APP_INSTALL_DIR"
+chmod +x "$APP_EXEC"
 
 # === Téléchargement du modèle ===
 if [[ ! -f "$MODEL_PATH" ]]; then
@@ -51,7 +59,6 @@ echo "🖼️ Téléchargement de l'icône vers $ICON_DEST_PATH"
 mv "$EXEC_DEST_PATH/$EXEC_NAME/exiftools.png" "$ICON_DEST_PATH"
 
 rm "$EXEC_DEST_PATH/$EXEC_NAME.tar.gz"
-rmdir "$EXEC_DEST_PATH/$EXEC_NAME/ExifTools"
 rmdir "$EXEC_DEST_PATH/$EXEC_NAME"
 
 # === Création du fichier .desktop ===
@@ -60,7 +67,7 @@ cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Name=$APP_NAME
 Comment=$APP_COMMENT
-Exec=$EXEC_DEST_PATH
+Exec=$APP_EXEC
 Icon=$ICON_DEST_PATH
 Terminal=false
 Type=Application
