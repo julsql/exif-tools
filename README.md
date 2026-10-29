@@ -10,6 +10,14 @@ Application pour visualiser et modifier les exif d'une photo.
 - Visualiser les coordonnées sur une carte (uniquement en ligne)
 - Modifier les coordonnées via la carte
 
+## Aperçu
+
+<p align="center">
+  <img src="docs/screenshots/editor.jpg" alt="Photo, métadonnées et carte" width="90%">
+</p>
+
+<sub>Métadonnées de démonstration. Photo : Uoaei1, [CC BY-SA 4.0](https://commons.wikimedia.org/wiki/File:Papilio_machaon_Mitterbach_01.jpg).</sub>
+
 Pour lancer l'application, lancer dans un terminal :
 
 ```bash
