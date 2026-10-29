@@ -21,6 +21,7 @@ from editor.metadata_panel import MetadataPanel
 from editor.map_panel import MapPanel
 from editor.specie_dialog import SpecieDialog
 
+from detect_specie import AI_AVAILABLE
 from detect_specie.inference_worker import InferenceWorker
 from detect_specie.model_loader import ModelLoaderThread
 from detect_specie.model_service import ModelService
@@ -53,8 +54,9 @@ class MainWindow(QMainWindow):
         self.transform = None
         self._origin_coords: tuple[float, float] | None = None  # NEW
 
-        loader = ModelLoaderThread(self.model_service, self.model_queue)
-        loader.start()
+        if AI_AVAILABLE:
+            loader = ModelLoaderThread(self.model_service, self.model_queue)
+            loader.start()
 
         self._build_ui()
         self._build_menu()
@@ -80,6 +82,7 @@ class MainWindow(QMainWindow):
         self.main_splitter.addWidget(self.map_panel)
 
         self.setCentralWidget(self.main_splitter)
+        self.image_panel.btn_find_specie.setVisible(AI_AVAILABLE)
 
         self.setStyleSheet(f"QMainWindow {{ background: {self.style_data.BG_COLOR}; }}")
         self.apply_style()
@@ -208,6 +211,7 @@ class MainWindow(QMainWindow):
         # Switch reconnaissance espèce (comme avant)
         self.act_switch_recognition = QAction("", self)
         self.act_switch_recognition.triggered.connect(self.switch_specie_recognition)
+        self.act_switch_recognition.setVisible(AI_AVAILABLE)
         menu_fenetre.addAction(self.act_switch_recognition)
 
         self._refresh_switch_labels()
@@ -239,6 +243,7 @@ class MainWindow(QMainWindow):
         act_find = QAction("Recherche l'espèce", self)
         act_find.setShortcut(QKeySequence("Ctrl+F"))
         act_find.triggered.connect(self._maybe_get_specie)
+        act_find.setVisible(AI_AVAILABLE)
 
         act_next = QAction("Image suivante", self)
         act_next.setShortcut(QKeySequence(Qt.Key.Key_Right))
@@ -448,6 +453,8 @@ class MainWindow(QMainWindow):
     # ---------- Reconnaissance espèce (threads existants) ----------
 
     def _maybe_get_specie(self) -> None:
+        if not AI_AVAILABLE:
+            return
         recog = self.config.get("recognition", self.style_data.DEFAULT_SPECIE)
         if not recog:
             return
