@@ -6,13 +6,19 @@ trap 'echo "❌ Une erreur est survenue. Installation interrompue."' ERR
 echo "🚀 Lancement de l'installation de l'application (version arm64)..."
 
 VERSION="2.0.6"
+# Édition : "lite" (sans IA) ou "full" (reconnaissance d'espèce). Ex : EDITION=full ./install-86_64.sh
+EDITION="${EDITION:-lite}"
+if [[ "$EDITION" != "lite" && "$EDITION" != "full" ]]; then
+  echo "❌ EDITION doit valoir 'lite' ou 'full' (reçu : $EDITION)"
+  exit 1
+fi
 
 # === Variables personnalisables ===
 APP_NAME="Éditeur Exif"
 APP_COMMENT="Outil de gestion des métadonnées EXIF"
 
 APP_DIR="$HOME/.exiftools"
-EXEC_NAME="ExifTools-$VERSION-linux-x86_64"
+EXEC_NAME="ExifTools-$VERSION-$EDITION-linux-x86_64"
 EXEC_DEST_PATH="$HOME/.exiftools"
 EXEC_SRC_PATH="https://github.com/julsql/exif-tools/releases/download/$VERSION/$EXEC_NAME.tar.gz"
 ICON_DEST_PATH="$HOME/.local/share/icons/exiftools.png"
@@ -39,7 +45,9 @@ mv "$EXEC_DEST_PATH/$EXEC_NAME/ExifTools/ExifTools" "$APP_DIR/ExifTools"
 chmod +x "$APP_DIR/ExifTools"
 
 # === Téléchargement du modèle ===
-if [[ ! -f "$MODEL_PATH" ]]; then
+if [[ "$EDITION" == "lite" ]]; then
+  echo "⏭️ Édition lite : pas de modèle à télécharger"
+elif [[ ! -f "$MODEL_PATH" ]]; then
   echo "⬇️ Téléchargement du modèle iNaturalist (peut prendre du temps)..."
   wget -O "$MODEL_PATH" "$MODEL_URL"
 else
