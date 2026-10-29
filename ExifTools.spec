@@ -1,6 +1,7 @@
 # python
 # -*- mode: python ; coding: utf-8 -*-
 import os
+import sys
 
 from PyInstaller.utils.hooks import collect_all
 
@@ -8,6 +9,8 @@ block_cipher = None
 
 # "full" (avec IA, défaut) ou "lite" (sans torch/birder)
 EDITION = os.environ.get("EXIFTOOLS_EDITION", "full").lower()
+if sys.platform.startswith("win"):
+    EDITION = "lite"  # torch non supporté dans le build Windows
 AI_PACKAGES = ["birder", "torch", "torchvision", "onnx", "onnxscript"]
 
 datas = [

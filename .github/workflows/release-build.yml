@@ -19,9 +19,8 @@ jobs:
           - { os: windows-latest, edition: lite, artifact_suffix: windows-x86_64 }
           - { os: ubuntu-latest, edition: lite, artifact_suffix: linux-x86_64 }
           - { os: ubuntu-24.04-arm, edition: lite, artifact_suffix: linux-arm64 }
-          # ---- full : avec IA (torch n'a plus de wheels macOS Intel) ----
+          # ---- full : avec IA (pas de macOS Intel : plus de wheels torch ; Windows : lite only) ----
           - { os: macos-14, edition: full, artifact_suffix: mac-arm }
-          - { os: windows-latest, edition: full, artifact_suffix: windows-x86_64 }
           - { os: ubuntu-latest, edition: full, artifact_suffix: linux-x86_64 }
           - { os: ubuntu-24.04-arm, edition: full, artifact_suffix: linux-arm64 }
 
