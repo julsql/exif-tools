@@ -46,7 +46,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v7
         with:
-          python-version: ${{ runner.os == 'Windows' && '3.11' || '3.12' }}
+          python-version: "3.15"
 
       - name: Linux - install CPU-only torch first
         if: runner.os == 'Linux' && matrix.edition == 'full'
