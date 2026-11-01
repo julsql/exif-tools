@@ -5,7 +5,7 @@ trap 'echo "❌ Une erreur est survenue. Installation interrompue."' ERR
 
 echo "🚀 Lancement de l'installation de l'application (version arm64)..."
 
-VERSION="2.0.6"
+VERSION="2.1.0"
 # Édition : "lite" (sans IA) ou "full" (reconnaissance d'espèce). Ex : EDITION=full ./install-86_64.sh
 EDITION="${EDITION:-lite}"
 if [[ "$EDITION" != "lite" && "$EDITION" != "full" ]]; then

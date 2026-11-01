@@ -3,7 +3,7 @@
 set -e  # Stoppe le script en cas d'erreur
 trap 'echo "❌ Une erreur est survenue. Installation interrompue."' ERR
 
-VERSION="2.0.6"
+VERSION="2.1.0"
 
 # === Config personnalisable ===
 APP_NAME="Éditeur Exif"
