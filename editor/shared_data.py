@@ -20,6 +20,7 @@ class StyleData:
         '%Y-%m-%d %H-%M-%S',
         '%Y-%m-%d %H:%M',
         '%Y-%m-%d %H-%M',
+        '%Y-%m-%d %H',
         '%Y-%m-%d',
         '%Y:%m:%d %H:%M:%S',
         '%Y:%m:%d %H-%M-%S',
