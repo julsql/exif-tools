@@ -197,6 +197,11 @@ class DateTimeField(QLineEdit):
     def _edit_time(self) -> None:
         """Ajoute 12:00:00 si pas d'heure, puis sélectionne l'heure : il suffit de taper les chiffres."""
         dt = self.parsed()
+        if dt is None and self.text().strip():
+            # Saisie non reconnue : on garde la date si elle est lisible, sinon on ne touche à rien
+            dt = parse_date(self.text()[:10], [DATE_ONLY_FORMAT])
+            if dt is None:
+                return
         if dt is None:
             dt = datetime.now()
         if self.text().strip() == "" or dt.time() == time(0, 0, 0) or len(self.text()) <= 10:
