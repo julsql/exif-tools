@@ -4,7 +4,7 @@ birder==0.8.4
 braceexpand==0.1.7
 contourpy==1.4.0
 cycler==0.12.1
-filelock==4.2.6
+filelock==4.2.7
 fonttools==4.68.0
 fsspec==2026.9.0
 grpcio==1.85.1
