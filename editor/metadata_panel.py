@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Dict
+from typing import Optional, Dict, Union
 
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QIcon
@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 )
 
 from editor import resource_path
+from editor.date_time_field import DateTimeField
 from editor.shared_data import StyleData
 from editor.exif_utils import (
     get_name,
@@ -57,7 +58,7 @@ class MetadataPanel(QWidget):
         self.style = style
 
         self._data_snapshot: Optional[Dict[str, str]] = None
-        self.entries: Dict[str, QLineEdit] = {}
+        self.entries: Dict[str, Union[QLineEdit, DateTimeField]] = {}
 
         self._build_ui()
 
@@ -77,7 +78,12 @@ class MetadataPanel(QWidget):
         row = 1
         for spec in self.FIELDS:
             lab = QLabel(f"{spec.title} :")
-            entry = QLineEdit()
+            if spec.key == "date_creation":
+                entry = DateTimeField(
+                    self.style.DISPLAYED_DATE_FORMAT, self.style.ACCEPTED_DATE_FORMATS, self
+                )
+            else:
+                entry = QLineEdit()
             entry.setReadOnly(spec.readonly)
 
             self.entries[spec.key] = entry
@@ -127,6 +133,14 @@ class MetadataPanel(QWidget):
                 border-radius: 6px;
                 padding: 6px;
             }}
+            QCalendarWidget QToolButton {{
+                color: {self.style.FONT_COLOR};
+            }}
+            QCalendarWidget QAbstractItemView {{
+                color: {self.style.FONT_COLOR};
+                background: {self.style.BG_COLOR};
+                selection-background-color: {self.style.SELECT_COLOR};
+            }}
             QLineEdit:read-only {{
                 color: {self.style.FG_DISABLE};
                 background: {self.style.BG_DISABLE};
@@ -148,6 +162,12 @@ class MetadataPanel(QWidget):
             btn = getattr(entry, "_reset_btn", None)
             if btn is not None:
                 btn.setIcon(reset_icon)
+
+        date_entry = self.entries.get("date_creation")
+        if isinstance(date_entry, DateTimeField):
+            date_entry.set_icons(
+                QIcon(resource_path(f"assets/{self.style.MODE}/close.png")), self.style.FONT_COLOR
+            )
 
     def _on_edit_finished(self) -> None:
         ok_date = self._validate_date()
@@ -186,22 +206,10 @@ class MetadataPanel(QWidget):
         return True
 
     def _validate_date(self) -> bool:
-        s = self.entries["date_creation"].text().strip()
-
-        # vide = suppression => OK
-        if s == "":
+        entry = self.entries["date_creation"]
+        # vide = suppression => OK ; le champ s'est déjà normalisé s'il a reconnu la date
+        if entry.text().strip() == "" or entry.parsed() is not None:
             return True
-
-        from datetime import datetime
-
-        for fmt in self.style.ACCEPTED_DATE_FORMATS:
-            try:
-                dt = datetime.strptime(s, fmt)
-                self.entries["date_creation"].setText(dt.strftime(self.style.DISPLAYED_DATE_FORMAT))
-                return True
-            except ValueError:
-                continue
-
         self._set_warn("Date invalide")
         return False
 
