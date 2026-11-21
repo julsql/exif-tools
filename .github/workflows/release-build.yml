@@ -157,6 +157,8 @@ jobs:
           Compression=lzma
           SolidCompression=yes
           WizardStyle=modern
+          SetupIconFile=assets\icon.ico
+          UninstallDisplayIcon={app}\{#MyAppExeName}
 
           VersionInfoVersion={#MyAppVersion}
           VersionInfoProductVersion={#MyAppVersion}

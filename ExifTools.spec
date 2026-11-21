@@ -129,6 +129,7 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
+    icon="assets/icon.ico" if sys.platform.startswith("win") else None,
     **exe_kwargs,
 )
 
