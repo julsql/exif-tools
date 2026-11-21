@@ -303,7 +303,8 @@ class MetadataPanel(QWidget):
     def set_name_prefix(self, prefix: str) -> None:
         current = self.entries["nom"].text().strip()
         if has_specie(current):
-            new_value = f"{prefix} {' '.join(current.split(" ")[2:])}".strip()
+            rest = " ".join(current.split(" ")[2:])
+            new_value = f"{prefix} {rest}".strip()
         else:
             new_value = f"{prefix} {current}".strip()
         self.entries["nom"].setText(new_value)
